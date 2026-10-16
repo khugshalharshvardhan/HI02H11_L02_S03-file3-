@@ -1,0 +1,22 @@
+# Secrets - API keys live in .env files and must never be committed
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# OS / editor clutter
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+
+# Local Vercel CLI state
+.vercel/
