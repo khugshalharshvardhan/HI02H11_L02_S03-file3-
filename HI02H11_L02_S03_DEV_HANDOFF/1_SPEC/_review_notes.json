@@ -1,0 +1,37 @@
+{
+  "01": "LANDING — «मात्राओं की रेल», the same heading as the उ/ऊ lesson. Two matra tiles, ◌े and ◌ै, with the amber pulsing glow. Visual chrome only: not tappable, no clip. VO: «नमस्ते दोस्त! मैं हूँ स्विफ्टी। आज हम मात्राओं की रेल में ए और ऐ की मात्रा सीखेंगे।» ⚠️ Your round-3 note asks for the matras to sit INSIDE painted train bogies here. This build still uses the engine's standard tile strip — the painted train is a separate art job and is listed as open below.",
+
+  "02": "SCREEN 1 · परिचय — ए → ◌े and ऐ → ◌ै, one pair lit at a time while its VO plays, the other dimmed. आगे stays locked until both are done. No छोटी/बड़ी here: unlike उ/ऊ, these two are simply ए and ऐ, so the VO names them that way.",
+
+  "03": "SCREEN 2 · मात्रा-जोड़ बिल्डर — सब → स + ◌े = से → सेब. ✅ BOTH the base word and the result are everyday: «सब» is a word every child says, and सेब is a thing they eat. That was your instruction and it changed the whole word bank. ✅ THE MATRA IS RED INSIDE THE WORD, in से and again in सेब. ✅ Your round-3 wording is used exactly: «स के साथ ए की मात्रा लगाने पर, से बनता है।» — not the «में … लगी» form you struck out.",
+
+  "04": "SCREEN 3 · दो उदाहरण — सेब, then पेड़. Word first, picture a beat later, then the matra glows — the order you asked for. ✅ THE HIGHLIGHT IS EXACT: it is clipped to the mark's own ink, measured by rendering «से» and «स» and diffing them, so only the ए hook turns red and the शिरोरेखा stays navy. An earlier build clipped a whole band and turned the headline red under the hook; it was caught by magnifying the capture, not by any checker.",
+
+  "05": "SCREEN 4 · मात्रा-जोड़ बिल्डर — पर → प + ◌ै = पै → पैर. «पर» is everyday, and पैर is the child's own body — as close to them as a word gets.",
+
+  "06": "SCREEN 5 · दो उदाहरण — पैर, then बैल. ✅ LOOK AT THE HIGHLIGHT ON पैर: both strokes of ऐ are red. Put beside सेब on page 4, which shows one, this IS the skill — «े और ै को एक ही ध्वनि सुनकर गड्डमड्ड करता है» is the misconception the curriculum names, and one hook versus two is the clearest answer to it we can draw.",
+
+  "07": "SCREEN 6 · रेल — «ए की मात्रा वाले शब्द पर टैप कीजिए।» Coaches: सेब · पैर · बैल. ✅ The matra is NOT highlighted before the answer — your note says that would give it away. It turns red on the chosen word only after a correct tap. ✅ Your 3-attempt ladder: 1st wrong → shake + hint VO, NO hand; 2nd wrong → shake, hint VO, correct coach glows with the hand; 3rd-try correct → confetti, SILENT.",
+
+  "08": "SCREEN 7 · रेल — for ऐ. Coaches: पेड़ · रेल · बैग.",
+
+  "09": "SCREEN 8 · रेल — mixed, and deliberately the harder way round: one ऐ word (पैन) hiding among two ए words (मेज़, रेल). Every earlier tap screen offered one matra's words; this one does not.",
+
+  "10": "SCREEN 9 · शब्द → मात्रा वाली बोगी. The first drag screen. ✅ COACH LABELS ARE JUST «ए» AND «ऐ» — no छोटी/बड़ी, no matra symbol, exactly as your round-3 note specifies. Each card speaks itself before the tray unlocks. A wrong drop shakes the coach and returns the card; the ladder is per-card.",
+
+  "11": "SCREEN 10 · मात्रा → बोगी — the reverse round. Now the coaches carry the LETTERS ए and ऐ and the child drags the MATRA. This stops a child pairing card-shape with coach-shape.",
+
+  "12": "SCREEN 11 · शब्द पूरा कीजिए — ✅ THIS IS YOUR REWRITE, BUILT. Not a bare matra any more: the child drags a whole अक्षर — से, पै, रे — into a blank that now sits FIRST (_ब, _र, _ला→_ल). That is a step up a level: by this screen they should read «से» as one unit, not assemble स + े. ✅ Two distractors (बै, मे) match no picture, so elimination alone will not finish it. Verified by dragging: a wrong drop returns the card and counts an attempt, and each completed word keeps its own matra marked — सेब and रेल in ए, पैर in ऐ.",
+
+  "13": "SCREEN 12 · सिर्फ़ चित्र — pictures only, no word text anywhere. The word is still SPOKEN when a card is tapped or picked up, which keeps this a listening task rather than picture-matching. रेल · मेज़ | बैग · पैन.",
+
+  "14": "SCREEN 13 · वाक्य पूरा कीजिए — ✅ THE NEW MODULE, BUILT TO YOUR MOCKUP: scene on the left, sentence with a dashed blank on the right, three picture options underneath. «बगीचे में एक बड़ा ___ है।» → पेड़. ✅ IT IS A DRAG, NOT A TAP — your note says the card «snaps into the blank space» and on a miss «returns to its original position», and neither sentence means anything for a tap. Tapping a card still speaks it, so a child who cannot yet read पैन can still tell the options apart.",
+
+  "15": "SCREEN 14 · वाक्य पूरा कीजिए — «मेरे ___ में दर्द है।» → पैर. This is the screen where decoding becomes MEANING: all three options are real words the child can read, and only the sentence picks one. That is the step NIPUN's Grade 2 goal actually names.",
+
+  "16": "SCREEN 15 · वाक्य पूरा कीजिए — «मुझे ___ खाना अच्छा लगता है।» → सेब. Note the distractors are deliberately readable, not nonsense — बैग and मेज़ are words, they are simply not edible.",
+
+  "17": "SCREEN 16 · वाक्य पूरा कीजिए — «मैं ___ से लिखता हूँ।» → पैन. Answers across the four sentences split 2 ए / 2 ऐ.",
+
+  "18": "SCREEN 17 · CELEBRATION — recaps the skill: «शाबाश! आज हमने सीखा, ए और ऐ की मात्रा पहचानना, और मात्रा वाले शब्द पढ़ना।» No score, no timer, no stars shown to the child."
+}

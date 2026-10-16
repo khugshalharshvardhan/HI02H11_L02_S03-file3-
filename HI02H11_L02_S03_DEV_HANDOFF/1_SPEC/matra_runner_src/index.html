@@ -1,0 +1,3413 @@
+<!DOCTYPE html>
+<html lang="hi" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>मात्रा रनर — ए और ऐ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Tiro+Devanagari+Hindi&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --jungle-deep:#12142b;
+    --jungle-mid:#241a4a;
+    --ember:#f2762e;
+    --gold:#ffcb45;
+    --leaf:#3fd39b;
+    --river:#43b8ff;
+    --bone:#fff4de;
+    --ink:#0c0a1c;
+    --hud-bg:rgba(18,14,42,.62);
+    --hud-line:rgba(255,203,69,.38);
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    color-scheme:dark;
+  }
+  *,*::before,*::after{box-sizing:inherit}
+  html,body{height:100%;margin:0;overflow:hidden;
+    background:radial-gradient(120% 120% at 50% 0%,#15122e,#07060f 70%);
+    font-family:"Baloo 2","Noto Sans Devanagari",system-ui,-apple-system,"Segoe UI",sans-serif;
+    color:var(--bone);-webkit-font-smoothing:antialiased;touch-action:none;
+    -webkit-tap-highlight-color:transparent;}
+  body{display:grid;place-items:center;padding:clamp(0px,1.4vmin,16px)}
+  #stage{position:relative;aspect-ratio:16/9;width:min(100%,177.7vh);max-height:100%;
+    overflow:hidden;background:var(--ink);border-radius:clamp(0px,1.4vmin,18px);
+    box-shadow:0 0 0 2px rgba(255,203,69,.16),0 30px 70px rgba(0,0,0,.65)}
+  @supports (width:100dvh){ #stage{width:min(100%,177.7dvh)} }
+  .rotate{position:fixed;inset:auto 0 12px;text-align:center;font-size:13px;opacity:.55;display:none}
+  @media (max-aspect-ratio:3/4){ .rotate{display:block} }
+  canvas{display:block;width:100%;height:100%;touch-action:none}
+
+  /* ---------- HUD ---------- */
+  .hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;
+       padding:2.2% 3%;gap:8px;font-size:min(2.6vh,2.1vw)}
+  .hud-top{display:flex;align-items:center;gap:2.2%}
+  .hud-bottom{margin-top:auto;display:flex;align-items:center;justify-content:space-between}
+  .pill{background:var(--mr-ui-panel, var(--hud-bg)) center/100% 100% no-repeat;
+       border:2px solid var(--mr-wood-line, var(--hud-line));border-radius:999px;
+       min-width:2.4em;padding:.22em .7em;text-align:center;font-weight:800;font-size:1.5em;
+       line-height:1.25;color:var(--mr-wood-ink, inherit);
+       text-shadow:var(--mr-wood-shadow, none)}
+  /* [r58] ONE PIP PER GATE, instead of a bar creeping along.
+     A continuous bar answers "how far through am I" with a fraction, which a six-year-old
+     cannot read. Six lamps, one of which lights every time a gate is passed, answers it by
+     counting - and gives the moment of passing something to do. */
+  .pips{flex:1;display:flex;gap:.45em;align-items:center}
+  .pips i{flex:1 1 0;height:.8em;border-radius:99px;
+       background:var(--mr-pip-off, rgba(0,0,0,.4));
+       border:2px solid var(--mr-pip-line, var(--hud-line));
+       box-shadow:inset 0 2px 3px rgba(0,0,0,.35);
+       transition:background .3s ease, box-shadow .3s ease, transform .3s ease}
+  /* a missed gate still counts as distance covered, but it must not light up gold - the rail
+     would be telling the child they had got it right */
+  .pips i.miss{background:linear-gradient(180deg,#b9a99a,#8d7c6c);
+       border-color:rgba(190,175,160,.7);box-shadow:inset 0 1px 2px rgba(0,0,0,.3)}
+  .pips i.on{background:linear-gradient(180deg,#ffe07a,#f0a324);
+       border-color:rgba(255,214,120,.9);
+       box-shadow:0 0 .55em rgba(255,205,95,.8), inset 0 1px 0 rgba(255,255,255,.5);
+       transform:scaleY(1.28)}
+  .matra{display:flex;align-items:var(--mr-badge-align, baseline);gap:.35em;
+       background:var(--mr-ui-badge, var(--hud-bg)) center/100% 100% no-repeat;
+       border:2px solid transparent;border-radius:999px;
+       width:var(--mr-badge-w, var(--mr-badge-sz, auto));height:var(--mr-badge-h, var(--mr-badge-sz, auto));
+       justify-content:center;color:var(--mr-wood-ink2, inherit);
+       padding:var(--mr-badge-pad, .12em .75em)}
+  .matra em{font-style:normal;font-weight:800;font-size:var(--mr-badge-em, 1.9em);line-height:1.05}
+  .matra span{font-size:var(--mr-badge-sp, 1.35em);font-weight:700;opacity:.8}
+  .matra.u{border-color:rgba(67,184,255,.75);box-shadow:0 0 22px rgba(67,184,255,.3)}
+  .matra.uu{border-color:rgba(242,118,46,.75);box-shadow:0 0 22px rgba(242,118,46,.3)}
+  .mute{pointer-events:auto;background:var(--mr-ui-btn, var(--hud-bg)) center/100% 100% no-repeat;
+       border:2px solid var(--mr-wood-line, var(--hud-line));
+       color:var(--bone);border-radius:999px;width:2.4em;height:2.4em;font-size:1.1em;cursor:pointer;
+       display:grid;place-items:center;padding:0;opacity:var(--mr-wood-op, .75)}
+  .mute:focus-visible{outline:3px solid var(--river);outline-offset:2px}
+  .hearts{font-size:1.8em;letter-spacing:.08em;line-height:1;
+       filter:drop-shadow(0 2px 6px rgba(0,0,0,.6))}
+  .hearts .off{opacity:.2}
+  /* [r39] the painted heart/star, when their files loaded; sized off the same font-size as
+     the glyph, so the row keeps its place whichever one is showing */
+  .hearts img{width:1em;height:1em;vertical-align:-.13em;object-fit:contain;margin:0 .04em}
+  .stars img{width:1em;height:1em;vertical-align:-.1em;object-fit:contain;margin:0 .05em}
+  /* [r112] Yasir: no level counter, no score, no word counter - the matra chip alone at the top
+     centre, half as big again, and the hearts at the right */
+  .hud-top{justify-content:center;position:relative;min-height:5em}
+  .hud-top .matra{font-size:1.5em}
+  /* [r113] Yasir: the matra "should come from the top of the screen with a rope attached, as if it is
+     hanging from the top". It drops in on its rope with a bounce and swings gently; between levels it
+     is pulled back up and comes down again with the new matra. */
+  .hang{position:absolute;left:50%;top:0;z-index:3;pointer-events:none;font-size:min(2.6vh,2.1vw);
+       transform:translate(-50%,-110%)}
+  .hang.in{animation:hangIn 1.05s cubic-bezier(.34,1.5,.55,1) both}
+  .hang.out{animation:hangOut .6s cubic-bezier(.55,0,.8,.2) both}
+  .hang-sw{transform-origin:50% 0;animation:hangSwing 3.4s ease-in-out infinite;
+       display:flex;flex-direction:column;align-items:center}
+  .rope{width:.5em;height:2.2em;border-radius:0 0 .2em .2em;
+       background:repeating-linear-gradient(155deg,#e2b06a 0 .2em,#a46a2e .2em .4em);
+       border:2px solid #5b3814;border-top:none;box-shadow:inset -.1em 0 0 rgba(0,0,0,.18)}
+  .rope-ring{width:1.05em;height:.8em;margin-top:-.2em;border:.22em solid #6b4318;border-radius:50%;
+       background:transparent;box-shadow:0 .1em .15em rgba(0,0,0,.35)}
+  /* [r115] Yasir: "increase the size of the matra" - 1.5em -> 2.2em */
+  /* [r116] on the board: no ring of colour round it - that belonged to the old round medallion */
+  .hang .matra, .cel-row .matra{border-color:transparent;box-shadow:none}
+  .hang .matra{font-size:2.2em;margin-top:-.25em;filter:drop-shadow(0 .25em .3em rgba(0,0,0,.35))}
+  /* [r115] THE CELEBRATION at the end of the game - see celebrate() */
+  .cel{position:absolute;inset:0;z-index:6;pointer-events:none;display:none;overflow:hidden;
+       font-size:min(2.6vh,2.1vw)}
+  .cel.on{display:block}
+  .cel-wash{position:absolute;inset:0;background:radial-gradient(70% 60% at 50% 42%,rgba(255,236,170,.55),
+       rgba(255,190,90,.18) 55%,rgba(60,30,0,.25));animation:celFade .6s ease both}
+  .cel-burst{position:absolute;left:50%;top:40%;width:150vmax;height:150vmax;margin:-75vmax 0 0 -75vmax;
+       background:repeating-conic-gradient(rgba(255,240,170,.30) 0 9deg,rgba(255,240,170,0) 9deg 18deg);
+       -webkit-mask:radial-gradient(circle,#000 0,#000 18%,transparent 52%);
+       mask:radial-gradient(circle,#000 0,#000 18%,transparent 52%);
+       animation:celFade .8s ease both, celSpin 22s linear infinite}
+  .cel-title{position:absolute;left:50%;top:6%;transform:translateX(-50%);font-weight:800;font-size:4.6em;
+       line-height:1.1;color:#ffd447;white-space:nowrap;
+       -webkit-text-stroke:.09em #6b3d0c;paint-order:stroke fill;
+       text-shadow:0 .08em 0 #6b3d0c,0 .2em .35em rgba(0,0,0,.35);
+       animation:celPop .7s cubic-bezier(.34,1.6,.55,1) .15s both}
+  .cel-rows{position:absolute;left:50%;top:27%;transform:translateX(-50%);display:flex;flex-direction:column;
+       gap:.6em;align-items:center}
+  .cel-row{display:flex;align-items:center;gap:.45em}
+  .cel-row .matra{font-size:1.25em;margin-right:.3em;animation:celPop .5s cubic-bezier(.34,1.6,.55,1) both}
+  .cel-orb{width:4.6em;height:4.9em;background:url("assets/MatraRunner/orb.webp") center/contain no-repeat;
+       display:flex;align-items:center;justify-content:center;padding-top:.75em;box-sizing:border-box;
+       font-weight:800;font-size:1.15em;color:#4a2a06;
+       filter:drop-shadow(0 0 .5em rgba(255,214,90,.8));
+       animation:celPop .5s cubic-bezier(.34,1.7,.55,1) both}
+  @keyframes celFade{from{opacity:0}to{opacity:1}}
+  @keyframes celSpin{to{transform:rotate(360deg)}}
+  @keyframes celPop{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
+  .cel-title{animation-name:celPopT}
+  @keyframes celPopT{0%{transform:translateX(-50%) scale(0);opacity:0}100%{transform:translateX(-50%) scale(1);opacity:1}}
+  @media (prefers-reduced-motion:reduce){ .cel-burst{animation:celFade .8s ease both} }
+  @keyframes hangIn{from{transform:translate(-50%,-110%)}to{transform:translate(-50%,0)}}
+  @keyframes hangOut{from{transform:translate(-50%,0)}to{transform:translate(-50%,-110%)}}
+  @keyframes hangSwing{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+  @media (prefers-reduced-motion:reduce){ .hang-sw{animation:none} }
+  .hud-top .hearts{position:absolute;right:0;top:50%;transform:translateY(-50%)}
+
+  /* [r112] THE TUTORIAL - the Temple Run way: the run stops in front of the obstacle, a hand shows
+     the swipe with a big arrow, and it carries on the moment the child does it */
+  .tut{position:absolute;inset:0;pointer-events:none;z-index:4;display:none}
+  .tut.on{display:block}
+  /* [r124] the anchor is a zero-size point the game keeps over Swifty's head, every frame; the
+     hand hangs above it and makes the swipe from there (up, down or side to side) */
+  .tut-anchor{position:absolute;left:50%;top:45%;width:0;height:0}
+  .tut-hand{position:absolute;left:-2.6em;bottom:.6em;width:5.2em;height:auto;opacity:0;
+       filter:drop-shadow(0 .2em .25em rgba(0,0,0,.4))}
+  .tut.up .tut-hand{animation:tutUp 1.25s ease-in-out infinite}
+  .tut.down .tut-hand{animation:tutDown 1.25s ease-in-out infinite}
+  .tut.side .tut-hand{animation:tutSide 1.6s ease-in-out infinite}
+  @keyframes tutPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+  @keyframes tutUp{0%{transform:translateY(0);opacity:0}15%{opacity:1}75%{transform:translateY(-4.5em);opacity:1}100%{transform:translateY(-4.5em);opacity:0}}
+  @keyframes tutDown{0%{transform:translateY(-4.5em);opacity:0}15%{opacity:1}75%{transform:translateY(0);opacity:1}100%{transform:translateY(0);opacity:0}}
+  @keyframes tutSide{0%{transform:translateX(-5em);opacity:0}12%{opacity:1}45%{transform:translateX(5em);opacity:1}
+       55%{transform:translateX(5em);opacity:1}88%{transform:translateX(-5em);opacity:1}100%{transform:translateX(-5em);opacity:0}}
+  @media (prefers-reduced-motion:reduce){ .tut .tut-hand{animation:none;opacity:1} }
+
+
+  /* ---------- touch pads ---------- */
+  .pads{position:absolute;inset:0;display:flex;pointer-events:none}
+  .pad{flex:1;pointer-events:auto}
+  .arrows{position:absolute;left:50%;transform:translateX(-50%);bottom:3%;
+       display:flex;gap:2.2vh;pointer-events:auto;font-size:min(2.6vh,2.1vw)}
+  .arrow{width:3.4em;height:2.6em;border-radius:1em;border:2px solid rgba(255,203,69,.28);
+       background:var(--hud-bg);color:var(--bone);font-size:1.5em;display:grid;place-items:center;
+       backdrop-filter:blur(6px);cursor:pointer;user-select:none;opacity:.7}
+  .arrow:active{background:rgba(255,203,69,.28)}
+  @media (pointer:fine){ .arrows{display:none} }
+
+  /* ---------- overlays ---------- */
+  .screen{position:absolute;inset:0;display:none;place-items:center;padding:4%;
+       background:radial-gradient(120% 90% at 50% 20%,rgba(58,34,14,.52),rgba(26,14,6,.78));
+       backdrop-filter:blur(3px);z-index:5;font-size:min(2.6vh,2.1vw)}
+  .screen.on{display:grid}
+  /* the same two-part board the word signs are: a thick warm frame round a lighter face */
+  /* A NINE-SLICE, not a stretched background. The board's frame carries flowers along the top
+     and bolts at the corners; scaled as one image to a card wider than it is tall, both smear.
+     Sliced, the corners keep their shape and only the flat runs between them stretch. Every
+     value has a fallback, so before the art loads - or without it - this is the plain brown
+     board it replaces. */
+  /* THE BOARD, WITH THE CONTENT INSIDE ITS CREAM FACE.
+     Tried as a nine-slice first, and it does not work here: border-image-width paints the art's
+     frame where the SLICES say, while border-width decides where the content box starts, and
+     the two can only agree at one card size. At every other size the text walked off the cream
+     and onto the posts. Given the card the board's own aspect ratio instead, one background
+     stretch is uniform, and the padding can be the measured inset of the cream face as a
+     percentage - so the text lands inside it at any size. */
+  .card{width:min(34em,94%);aspect-ratio:var(--mr-card-ar, auto);
+       background:var(--mr-card-bg, linear-gradient(170deg,#6b4423,#4a2d14));
+       border:var(--mr-card-bw, .5em) solid var(--mr-card-bc, #8a5a2e);
+       border-radius:var(--mr-card-r, 1.4em);
+       padding:var(--mr-card-pad, 1.6em 1.8em);
+       display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:.22em;
+       text-align:center;filter:drop-shadow(0 18px 34px rgba(0,0,0,.5));overflow:hidden}
+  .nextup{margin:0;font-size:.95em;font-weight:800;line-height:1.35;
+       color:var(--mr-card-ink, #fff3dc)}
+  .card h1{margin:0;font-size:1.9em;font-weight:800;line-height:1.05;
+       color:var(--mr-card-head, var(--gold));text-shadow:var(--mr-card-sh, 0 .1em 0 rgba(0,0,0,.35))}
+  .card h2{margin:0;font-size:1.5em;font-weight:800;color:var(--mr-card-head, var(--gold))}
+  .card p{margin:0;font-size:1em;line-height:1.45;opacity:.95;color:var(--mr-card-ink, inherit)}
+  .keys{display:flex;gap:.8em;justify-content:center;margin:0 0 1.2em;flex-wrap:wrap}
+  .keys div{display:flex;align-items:baseline;gap:.3em;background:rgba(255,244,222,.92);
+       color:#4a3520;border-radius:999px;padding:.25em .9em;font-weight:800;
+       border:2px solid transparent}
+  .keys div:first-child{border-color:rgba(67,184,255,.6)}
+  .keys div:last-child{border-color:rgba(242,118,46,.6)}
+  .keys em{font-style:normal;font-size:1.7em;line-height:1.1}
+  .keys span{font-size:1.2em;opacity:.8}
+  .btn{pointer-events:auto;display:inline-block;border:none;cursor:pointer;font-family:inherit;
+       font-weight:800;font-size:1.35em;color:#2a1400;padding:.55em 1.5em;
+       border-radius:.7em;background:linear-gradient(180deg,#ffd76b,#f5a324);
+       box-shadow:0 .25em 0 #b46a06,0 .5em 1em rgba(0,0,0,.4);transition:transform .08s,box-shadow .08s}
+  .btn:active{transform:translateY(.18em);box-shadow:0 .07em 0 #b46a06,0 .25em .6em rgba(0,0,0,.4)}
+  .btn:focus-visible{outline:3px solid var(--river);outline-offset:3px}
+  .btn.ghost{background:rgba(255,244,222,.14);color:var(--bone);
+       border:2px solid rgba(255,222,170,.55);box-shadow:none;font-size:1.05em}
+  .btnrow{display:flex;gap:.7em;justify-content:center;flex-wrap:wrap;margin-top:.3em}
+  .stars{font-size:1.9em;letter-spacing:.1em;margin:0;line-height:1;color:var(--gold)}
+  .stars .off{opacity:.2}
+  .tally{display:flex;justify-content:center;gap:.4em;margin:0;font-size:.82em;
+       width:100%;flex:0 0 auto}
+  .tally div{background:var(--mr-tally-bg, rgba(32,18,6,.42));
+       border:2px solid var(--mr-tally-line, rgba(255,222,170,.18));
+       border-radius:.7em;padding:.4em .5em;flex:1 1 0;min-width:0}
+  .tally b{display:block;font-size:1.5em;color:var(--mr-card-head, var(--gold));line-height:1.1}
+  .tally span{font-size:.85em;opacity:.8;color:var(--mr-card-ink, inherit)}
+  .missed{margin:0;font-size:.95em;line-height:1.7;color:var(--mr-card-ink, inherit)}
+  .missed span{display:inline-block;background:rgba(255,120,90,.16);border:1px solid rgba(255,120,90,.45);
+       border-radius:.5em;padding:.1em .6em;margin:.15em}
+  .creds{margin-top:.9em;font-size:.9em;opacity:.45}
+  @media (prefers-reduced-motion:reduce){ .bar i{transition:none} }
+</style>
+</head>
+<body>
+<div class="rotate">फ़ोन को घुमाएँ</div>
+<div id="stage">
+  <canvas id="game"></canvas>
+
+  <div class="pads">
+    <div class="pad" data-dir="-1"></div>
+    <div class="pad" data-dir="1"></div>
+  </div>
+
+  <div class="hud">
+    <div class="hud-top">
+      <div class="hearts" id="hearts">❤❤❤</div>
+    </div>
+  </div>
+
+  <!-- [r115] the end-of-game celebration -->
+  <div class="cel" id="cel" aria-hidden="true">
+    <div class="cel-wash"></div>
+    <div class="cel-burst"></div>
+    <div class="cel-title">शाबाश!</div>
+    <div class="cel-rows" id="celRows"></div>
+  </div>
+
+  <!-- [r113] the matra hangs on a rope from the top of the screen -->
+  <div class="hang" id="hang" aria-hidden="true">
+    <div class="hang-sw">
+      <div class="rope"></div>
+      <div class="rope-ring"></div>
+      <div class="matra u" id="matraChip"><em>ए</em><span>े</span></div>
+    </div>
+  </div>
+
+  <!-- [r112] the tutorial's hand. [r124] Yasir: no arrow - only the hand, above Swifty -->
+  <div class="tut" id="tut" aria-hidden="true">
+    <div class="tut-anchor" id="tutAnchor"><img class="tut-hand" src="assets/UI/nudge_hand_new.svg" alt=""></div>
+  </div>
+
+  <div class="arrows">
+    <button class="arrow" data-dir="-1" aria-label="बाएँ जाएँ">◀</button>
+    <button class="arrow" data-act="jump" aria-label="कूदिए">▲</button>
+    <button class="arrow" data-act="slide" aria-label="फिसलिए">▼</button>
+    <button class="arrow" data-dir="1" aria-label="दाएँ जाएँ">▶</button>
+  </div>
+
+  <!-- no start card: the game begins as the screen arrives -->
+
+  <!-- level done -->
+  <div class="screen" id="scLevel">
+    <div class="card">
+      <h2 id="lvlTitle">स्तर पूरा</h2>
+      <div class="stars" id="lvlStars">★★★</div>
+      <p class="nextup" id="lvlNext"></p>
+    </div>
+  </div>
+
+  <!-- game over -->
+  <div class="screen" id="scOver">
+    <div class="card">
+      <h2>फिर से कोशिश करो</h2>
+      <p id="overTip"></p>
+
+    </div>
+  </div>
+
+  <!-- win -->
+  <div class="screen" id="scWin">
+    <div class="card">
+      <h1>शाबाश!</h1>
+      <p>आपने सारे शब्द पकड़ लिए।</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ======================= शब्द भंडार (word bank) ======================= */
+/* [S03] the same two slots, re-pointed: U is the ए matra (े), UU the ऐ matra (ै). The game's code
+   keeps its names so its logic is byte-for-byte S02's; only the marks and the words change. */
+const U  = "े";            // े  e
+const UU = "ै";            // ै  ai
+
+/* every word carries its own matra once and never the other one; none carries ं (an above-line dot
+   would sit inside the highlight band, see the card highlight below) */
+const POOL_U = [["सेब","seb"],["पेड़","ped"],["मेज़","mez"],["शेर","sher"],["बेर","ber"],
+  ["रेल","rail"],["केला","kela"],["मेला","mela"],["खेल","khel"],["तेल","tel"],
+  ["भेड़","bhed"],["बेल","bel"],["देश","desh"],["बेटा","beta"],["नेता","neta"],
+  ["ठेला","thela"],["चेहरा","chehra"],["पेट","pet"],["खेत","khet"],["सेठ","seth"]];
+
+const POOL_UU = [["पैर","pair"],["बैल","bail"],["बैग","bag"],["पैन","pen"],["थैला","thaila"],
+  ["पैसा","paisa"],["मैना","maina"],["सैनिक","sainik"],["मैदान","maidan"],["तैराक","tairak"],
+  ["पैदल","paidal"],["थैली","thaili"],["मैल","mail"],["तैयार","taiyar"],["बैठक","baithak"],
+  ["कैमरा","camera"],["नैया","naiya"],["हैरान","hairan"],["गैस","gas"],["बैर","bair"]];
+
+const hasU  = w => w.indexOf(U)  >= 0;
+const hasUU = w => w.indexOf(UU) >= 0;
+const ONLY_U  = POOL_U.filter(w=>hasU(w[0])  && !hasUU(w[0]));
+const ONLY_UU = POOL_UU.filter(w=>hasUU(w[0]) && !hasU(w[0]));
+
+/* [r80] CACHE-BUST THE GAME'S SOUNDS, as the lesson does its own (__AUDIO_V). The deployment
+   serves assets/ as immutable for a year, and a re-recorded clip keeps its filename - so a browser
+   that had heard the old goal_u.ogg would go on playing it after every redeploy. The lesson build
+   stamps this from the CONTENT of the game's voice, music and feedback files, so it moves exactly
+   when one of them changes. Opened on its own the game keeps the placeholder, which is harmless. */
+const MR_AV = "__MR_AUDIO_V_STAMP__";
+const mrv = u => u + "?v=" + MR_AV;
+/* [r124] THE SAME FOR THE GAME'S PICTURES AND ITS VIDEO. Yasir: "when I enter the game screen it
+   plays the very earlier version ... multiple times". The art has been replaced several times under
+   the SAME filenames (coin, board, bridge, Swifty, the valley video) and the host served assets/ as
+   immutable for a year, so a device that had played an earlier build kept drawing the old pictures.
+   Stamped from the CONTENT of the art folder by the lesson build, so a changed file gets a new
+   address and every device fetches it; unchanged, the address stays and the cache still works. */
+const MR_IV = "__MR_ART_V_STAMP__";
+const mri = u => u + "?v=" + MR_IV;
+/* बोली जाने वाली पंक्तियाँ — assets/MatraRunner/voice/<id>.ogg */
+/* [r76] the lesson's आप register, as the recordings now speak it (the SME's round-3 rule: the
+   lesson build fails any clip with a तुम form, and these only escaped because they had never been
+   recorded). This text is what the device's own TTS reads if a recording is ever missing. */
+const LINES = {
+  goal_e   : "ए की मात्रा वाले शब्द पकड़िए।",
+  goal_ai  : "ऐ की मात्रा वाले शब्द पकड़िए।",
+  level_next:"वाह! अब इस लेवल को पार कीजिए।",       /* [r77] between levels, with the next goal */
+  right    : "शाबाश!",
+  wrong    : "फिर से देखिए।",
+  correct_is:"सही शब्द है",
+  level_up : "बहुत बढ़िया!",
+  retry    : "कोई बात नहीं, फिर से कोशिश कीजिए।",
+  win      : "शाबाश! आपने सारे शब्द पकड़ लिए!",   /* [r114] was «…सारे द्वार पार हो गए!» - no portals now */
+  /* [r112] the tutorial and the obstacle bump (TTS placeholders - to be recorded) */
+  tut_lane : "उँगली दाएँ या बाएँ सरकाइए, और रास्ता बदलिए।",
+  tut_jump : "उँगली ऊपर सरकाइए, और कूदिए!",
+  tut_slide: "उँगली नीचे सरकाइए, और नीचे से फिसलिए!",
+  tut_go   : "बहुत बढ़िया! अब खेल शुरू करते हैं।",
+  hit      : "अरे! ध्यान से।"
+};
+
+/* ======================= स्तर (levels) ======================= */
+const LEVELS = [
+  /* [r96] names are shown on screen - «छोटी» / «बड़ी» only in the VO */
+  {name:"ऐ",  target:UU, gates:6, speed:0.155, easy:true },
+  {name:"ए",  target:U,  gates:6, speed:0.170, easy:true }
+];
+
+/* ======================= canvas setup ======================= */
+const cvs = document.getElementById("game");
+const ctx = cvs.getContext("2d");
+let W=0,H=0,S=1,DPR=1;
+function resize(){
+  const r = cvs.getBoundingClientRect();
+  DPR = Math.min(2, window.devicePixelRatio||1);
+  W = Math.max(280, r.width); H = Math.max(320, r.height);
+  cvs.width = Math.round(W*DPR); cvs.height = Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  S = Math.min(H/700, W/520);              // art unit
+  buildBackdrop();
+}
+window.addEventListener("resize", resize);
+
+/* perspective */
+const K = 3.15;
+const horizonY = () => H*0.355;
+const groundY  = () => H*0.905;
+function proj(z){
+  const p = 1/(1+z*K);
+  return {p, y: horizonY() + (groundY()-horizonY())*p};
+}
+const LANES = 2;
+const LANE_W = () => W*0.30;                 // gap between the two gates
+/* [r68] THE BRIDGE is on when its three parts have loaded. The deck is a little broader than the
+   old road (1.22 against 1.08 lane-widths either side of centre) - Yasir asked for a broader path,
+   and a parapet needs a hand's width of stone between it and the portals or they look jammed in. */
+const bridgeOn = () => !!(window.MR_ART && MR_ART.has("deck") && MR_ART.has("post") && MR_ART.has("wall"));
+const roadHalf = () => bridgeOn() ? 1.22 : 1.08;
+
+/* [r47] THE CAMERA. It trails the runner sideways by a third of her lane offset, which is what
+   stops a lane change from looking like a sprite sliding across a still picture: the whole
+   world swings the other way, and because a world offset is scaled by depth on its way to the
+   screen, near things swing a long way and far things hardly move. She still visibly crosses
+   the track, because the camera only takes a third of it. */
+const CAM_FOLLOW = 0.34;
+const camLane = () => (G.laneF - 0.5) * CAM_FOLLOW;
+/* laneOff is in LANES from the centre of the track; p is the depth foreshortening. Everything
+   that stands in the world goes through here, so the camera exists in exactly one place. */
+const worldX = (laneOff, p) => W/2 + (laneOff - camLane())*LANE_W()*p;
+const laneX = (lane,p) => worldX(lane-0.5, p);
+
+/* ======================= state ======================= */
+const G = {
+  mode:"menu", level:0, score:0, hearts:3, hold:false, ramp:1, holdT:0, nextT:0, deadT:0,
+  lane:0, laneF:0, targetLane:0,        // 0 = बायाँ द्वार, 1 = दायाँ द्वार
+  gates:[], coins:[], decor:[], rails:[], parts:[], pops:[], pips:[], ground:0,
+  cleared:0, right:0, wrong:0, missedWords:[], usedWords:[],
+  speed:0.3, target:U, shake:0, flash:0, flashCol:"#fff",
+  t:0, dashT:0, best:0, banner:null,
+  /* [r112] obstacles, Swifty's jump / slide / bump timers, and the tutorial */
+  obs:[], jumpT:0, slideT:0, hitT:0, tut:null, tutDone:false, lastOb:"",
+  /* [r113] the speed it is heading for (G.speed eases to it), and the stretch between two levels */
+  speedT:0, between:false,
+  /* [r115] the words caught (for the celebration), and the run-out before it */
+  caught:[], cel:false
+};
+
+/* storage */
+try{ const b = localStorage.getItem("matraRunnerBest"); if(b) G.best = parseInt(b,10)||0; }catch(e){}
+function saveBest(){ try{ localStorage.setItem("matraRunnerBest", String(G.best)); }catch(e){} }
+
+/* ======================= आवाज़ (sfx + voiceover) =======================
+   मोड: 2 = आवाज़ + शब्द बोलना, 1 = सिर्फ़ आवाज़, 0 = बंद
+   हर शब्द पहले assets/MatraRunner/voice/<id>.ogg से बजता है।
+   फ़ाइल न मिले तो डिवाइस की हिंदी आवाज़ (Web Speech) से बोला जाता है। */
+let AC=null, MASTER=null, MUSBUS=null, SFXBUS=null, NOISE=null;
+
+function audioReady(){
+  if(VOICE.mode < 1) return null;
+  try{
+    if(!AC){
+      AC = new (window.AudioContext||window.webkitAudioContext)();
+      MASTER = AC.createGain(); MASTER.gain.value = 0.9; MASTER.connect(AC.destination);
+      MUSBUS = AC.createGain(); MUSBUS.gain.value = 0.0; MUSBUS.connect(MASTER);
+      SFXBUS = AC.createGain(); SFXBUS.gain.value = 1.0; SFXBUS.connect(MASTER);
+      /* one second of noise, made once and re-used: the attack transient of every note */
+      const n = AC.sampleRate|0;
+      NOISE = AC.createBuffer(1, n, AC.sampleRate);
+      const d = NOISE.getChannelData(0);
+      for(let i=0;i<n;i++) d[i] = Math.random()*2-1;
+    }
+    if(AC.state === "suspended") AC.resume();
+    loadFb();
+    return AC;
+  }catch(e){ return null; }
+}
+
+/* ONE NOTE. Two detuned oscillators through a filter that opens on the attack and closes as it
+   decays, with a noise transient on the front. The filter sweep is what separates a plucked
+   note from a held tone, and the transient is what makes it sound struck. */
+function note(o){
+  const ac = audioReady(); if(!ac) return;
+  const t0 = ac.currentTime + (o.at||0);
+  const dur = o.dur||0.4, f = o.f, bus = o.bus || SFXBUS;
+  const g = ac.createGain();
+  const lp = ac.createBiquadFilter(); lp.type="lowpass";
+  lp.frequency.setValueAtTime(Math.min(12000, f*(o.open||7)), t0);
+  lp.frequency.exponentialRampToValueAtTime(Math.max(180, f*1.2), t0+dur*0.9);
+  lp.Q.value = o.q || 1;
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(o.vol||0.18, t0 + (o.atk||0.008));
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  lp.connect(g).connect(bus);
+  [0, o.detune||6].forEach(function(dt, k){
+    const osc = ac.createOscillator();
+    osc.type = o.type || "triangle";
+    osc.frequency.setValueAtTime(f, t0);
+    if(o.glide) osc.frequency.exponentialRampToValueAtTime(o.glide, t0+dur*0.8);
+    osc.detune.value = dt;
+    const og = ac.createGain(); og.gain.value = k ? 0.5 : 1;
+    osc.connect(og).connect(lp);
+    osc.start(t0); osc.stop(t0+dur+0.03);
+  });
+  if(o.tick){
+    const src = ac.createBufferSource(); src.buffer = NOISE; src.loop = true;
+    const bp = ac.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value = f*3; bp.Q.value=1.2;
+    const ng = ac.createGain();
+    ng.gain.setValueAtTime((o.vol||0.18)*o.tick, t0);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t0+0.05);
+    src.connect(bp).connect(ng).connect(bus);
+    src.start(t0); src.stop(t0+0.08);
+  }
+}
+
+/* a swept band of noise - wind, shimmer, a thing breaking open */
+function whoosh(o){
+  const ac = audioReady(); if(!ac) return;
+  const t0 = ac.currentTime + (o.at||0), dur = o.dur||0.5;
+  const src = ac.createBufferSource(); src.buffer = NOISE; src.loop = true;
+  const bp = ac.createBiquadFilter(); bp.type="bandpass"; bp.Q.value = o.q||2.5;
+  bp.frequency.setValueAtTime(o.from||400, t0);
+  bp.frequency.exponentialRampToValueAtTime(o.to||3000, t0+dur);
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(o.vol||0.12, t0+0.03);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  src.connect(bp).connect(g).connect(o.bus||SFXBUS);
+  src.start(t0); src.stop(t0+dur+0.05);
+}
+
+/* ---------- the cues ---------- */
+const A4=440, sc = n => A4*Math.pow(2,(n-9)/12);       /* semitones from C */
+/* [r73] Yasir's feedback sounds, decoded once into buffers and played through the effects bus,
+   so they duck the music like every other effect. The synthesised cues stay as the fallback. */
+const FB = { correct:null, incorrect:null, asked:false, bad:{}, el:{} };
+function loadFb(){
+  if(FB.asked || !AC) return; FB.asked = true;
+  /* [r78] as a file: one warmed <audio> element each, cloned per play so two can overlap */
+  ["correct", "incorrect"].forEach(k => { FB.el[k] = new Audio(mrv("assets/Audio/sfx_fb_" + k + ".ogg"));
+    FB.el[k].preload = "auto"; });
+  if(LOCAL) return;
+  [["correct", mrv("assets/Audio/sfx_fb_correct.ogg")], ["incorrect", mrv("assets/Audio/sfx_fb_incorrect.ogg")]]
+    .forEach(([k, u]) => fetch(u).then(r => { if(!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(ab => new Promise((res, rej) => AC.decodeAudioData(ab, res, rej)))
+      .then(b => { FB[k] = b; }).catch(()=>{ FB.bad[k] = true; }));
+}
+function playFb(k, vol){
+  const ac = audioReady(); if(!ac) return false;
+  loadFb();
+  const b = FB[k];
+  if(!b){
+    if(!(LOCAL || FB.bad[k]) || !FB.el[k]) return false;       /* still loading: the synth cue */
+    try{ const a = FB.el[k].cloneNode(); a.volume = Math.min(1, vol * 0.9);
+      const p = a.play(); if(p && p.catch) p.catch(()=>{}); }catch(e){ return false; }
+    MUSIC.sfxDuck(0.9);
+    return true;
+  }
+  const src = ac.createBufferSource(), g = ac.createGain();
+  g.gain.value = vol; src.buffer = b; src.connect(g); g.connect(SFXBUS); src.start();
+  MUSIC.sfxDuck(b.duration);
+  return true;
+}
+const sfxRight = ()=>{ if(playFb("correct", 0.85)) return; MUSIC.sfxDuck(0.55);                                  /* up the pentatonic, and a shimmer */
+  [0,4,7,12].forEach((n,i)=> note({f:sc(n+12), at:i*0.055, dur:.42, vol:.17, tick:.5, open:9}));
+  whoosh({from:1800, to:6500, dur:.5, vol:.055, q:1.4});
+};
+const sfxWrong = ()=>{ if(playFb("incorrect", 0.85)) return; MUSIC.sfxDuck(0.45);                                  /* a soft thud that falls, not a buzzer */
+  note({f:196, glide:132, dur:.34, vol:.16, type:"sine", open:3, tick:.35});
+  note({f:98,  glide:66,  dur:.4,  vol:.12, type:"sine", open:2, at:.02});
+};
+/* [r112] Yasir: "increase the sfx sound of the coins" - about two and a half times as loud, and a
+   bright two-note ding with a sparkle on top, so it is heard over the music */
+const sfxCoin  = ()=>{ MUSIC.sfxDuck(0.30); note({f:sc(28), dur:.16, vol:.26, tick:.8, open:14});
+                       note({f:sc(35), at:.07, dur:.30, vol:.22, open:14});
+                       whoosh({from:5200, to:9000, at:.05, dur:.18, vol:.05, q:2}); };
+const sfxLevel = ()=>{ MUSIC.sfxDuck(1.00); [0,4,7,12,16].forEach((n,i)=>
+                         note({f:sc(n+12), at:i*0.1, dur:.55, vol:.16, tick:.4, open:9}));
+                       whoosh({from:900, to:7000, dur:.9, vol:.05, q:1.2}); };
+/* the gate coming apart: a bright shatter over a low body hit */
+const sfxGate  = (ok)=>{ MUSIC.sfxDuck(0.5);
+  if(ok){
+    whoosh({from:2600, to:9000, dur:.42, vol:.10, q:1.1});
+    [0,7,12,19].forEach((n,i)=> note({f:sc(n+24), at:i*0.03, dur:.3, vol:.09, open:14}));
+  }else{
+    whoosh({from:900, to:260, dur:.34, vol:.09, q:1.8});
+    note({f:110, glide:78, dur:.3, vol:.13, type:"sine", open:2});
+  }
+};
+
+/* [r71] THE CARTOON PRATFALL. Three sounds every child knows from cartoons, built from raw
+   oscillators so they cost no files:
+     bonk   - a hollow wooden knock: two partials that drop in pitch as they die, and a click
+     whistle- a slide whistle falling two and a half octaves, with a wobble on it
+     boing  - a spring: a low tone whose pitch is shaken by a fast wobble that dies away */
+function _osc(type, f, t0, dur, vol, bus){
+  const ac = AC, o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t0);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.connect(bus || SFXBUS); o.connect(g);
+  o.start(t0); o.stop(t0 + dur + 0.05);
+  return { o, g };
+}
+const sfxBonk = ()=>{
+  const ac = audioReady(); if(!ac) return; MUSIC.sfxDuck(0.35);
+  const t = ac.currentTime + 0.005;
+  [[330, 170, 0.20, 0.34], [820, 520, 0.07, 0.16]].forEach(([f0, f1, d, v])=>{
+    const n = _osc("sine", f0, t, d + 0.05, v);
+    n.o.frequency.exponentialRampToValueAtTime(f1, t + d);
+    n.g.gain.exponentialRampToValueAtTime(v, t + 0.003);
+    n.g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.04);
+  });
+  whoosh({ from:2500, to:4200, dur:.03, vol:.12, q:1.2 });          /* the click of the knock */
+};
+const sfxSlideWhistle = (at)=>{
+  const ac = audioReady(); if(!ac) return;
+  const t = ac.currentTime + (at || 0), dur = 0.85; MUSIC.sfxDuck((at || 0) + dur + 0.1);
+  const n = _osc("sine", 1650, t, dur, 0.16);
+  n.o.frequency.exponentialRampToValueAtTime(260, t + dur);
+  const lfo = ac.createOscillator(), lg = ac.createGain();         /* the player's wobbly breath */
+  lfo.frequency.value = 7; lg.gain.value = 28; lfo.connect(lg); lg.connect(n.o.detune);
+  lfo.start(t); lfo.stop(t + dur + 0.05);
+  n.g.gain.exponentialRampToValueAtTime(0.16, t + 0.03);
+  n.g.gain.setValueAtTime(0.16, t + dur - 0.12);
+  n.g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  const h = _osc("triangle", 3300, t, dur, 0.03);                   /* a breath of edge on top */
+  h.o.frequency.exponentialRampToValueAtTime(520, t + dur);
+  h.g.gain.exponentialRampToValueAtTime(0.03, t + 0.03);
+  h.g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+};
+const sfxBoing = (at)=>{
+  const ac = audioReady(); if(!ac) return;
+  const t = ac.currentTime + (at || 0), dur = 0.6; MUSIC.sfxDuck((at || 0) + dur);
+  const n = _osc("triangle", 150, t, dur, 0.3);
+  n.o.frequency.linearRampToValueAtTime(240, t + dur * 0.5);
+  const lfo = ac.createOscillator(), lg = ac.createGain();         /* the spring's shake, dying */
+  lfo.frequency.value = 17; lfo.connect(lg); lg.connect(n.o.frequency);
+  lg.gain.setValueAtTime(70, t); lg.gain.exponentialRampToValueAtTime(2, t + dur);
+  lfo.start(t); lfo.stop(t + dur + 0.05);
+  n.g.gain.exponentialRampToValueAtTime(0.3, t + 0.01);
+  n.g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+};
+
+/* ---------- the bed ---------- *
+   Four bars, C major pentatonic. Scheduled a bar ahead against the audio clock: setTimeout
+   drifts with the frame rate and a bed that stutters is worse than no bed at all. */
+/* [r70] the rendered track: see the header of this change in CHANGES_HINTS.md (r70) */
+/* [r78] OPENED AS A FILE (double-clicked, file://) the browser refuses fetch() of every local file,
+   so the decoded-buffer route this game used for its voice, music and feedback sounds got nothing
+   at all: the voice fell through to the device's TTS - which on Windows has no Hindi voice, i.e.
+   silence - the music to the synthesised bed and the feedback to synthesised tones. The lesson's
+   own player has always fallen back to an <audio> element there; the game now does the same. */
+const LOCAL = location.protocol === "file:";
+const BGM = { url:mrv("assets/MatraRunner/bgm_game.ogg"), buf:null, loading:false, failed:false,
+              src:null, gain:null, el:null, sync:0 };
+function loadBgm(){
+  if(LOCAL){ if(MUSIC.on) MUSIC.playEl(); return; }
+  if(BGM.buf || BGM.loading || BGM.failed || !AC) return;
+  BGM.loading = true;
+  fetch(BGM.url).then(r => { if(!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+    .then(ab => new Promise((res, rej) => AC.decodeAudioData(ab, res, rej)))
+    .then(b => { BGM.buf = b; BGM.loading = false; if(MUSIC.on) MUSIC.playFile(); })
+    .catch(() => { BGM.loading = false; BGM.failed = true; if(MUSIC.on) MUSIC.playEl(); });
+}
+const MUSIC = {
+  on:false, next:0, bar:0, tmr:0, file:false,
+  BPM:96,
+  LEVEL:0.16, DUCK:0.045, SFXDUCK:0.08,   /* the synth bed's levels; the file sets its own */
+  _claims:{}, _sfxUntil:0, _sfxT:0,
+  /* [r71] ONE PLACE DECIDES THE LEVEL. Each voice source claims the duck under its own name, so
+     one finishing cannot lift the music while another is still speaking; effects claim it for
+     their length. */
+  target(){
+    if(!AC) return this.LEVEL;
+    for(const k in this._claims) if(this._claims[k]) return this.DUCK;
+    return AC.currentTime < this._sfxUntil ? this.SFXDUCK : this.LEVEL;
+  },
+  apply(tc){
+    if(!AC || !MUSBUS || !this.on) return;
+    const v = this.target(), now = AC.currentTime;
+    MUSBUS.gain.cancelScheduledValues(now);
+    MUSBUS.gain.setTargetAtTime(v, now, tc || (v < this.LEVEL ? 0.08 : 0.45));
+  },
+  setDuck(src, on){ this._claims[src] = !!on; this.apply(); },
+  sfxDuck(sec){
+    if(!AC) return;
+    this._sfxUntil = Math.max(this._sfxUntil, AC.currentTime + sec);
+    this.apply(0.04);
+    clearTimeout(this._sfxT);
+    this._sfxT = setTimeout(()=> this.apply(), sec * 1000 + 30);
+  },
+  pad: [[0,7,16],[ -3,4,12],[ -5,2,9],[ -1,4,11]],       /* one chord a bar */
+  fig: [0,7,12,7,4,12,16,12],                             /* eighths over it */
+  start(){
+    const ac = audioReady(); if(!ac || this.on) return;
+    this.on = true; this.bar = 0; this.next = ac.currentTime + 0.12;
+    MUSBUS.gain.cancelScheduledValues(ac.currentTime);
+    MUSBUS.gain.setValueAtTime(0.0001, ac.currentTime);
+    if(BGM.buf){ this.playFile(); return; }
+    if(LOCAL || BGM.failed){ this.playEl(); return; }
+    MUSBUS.gain.exponentialRampToValueAtTime(Math.max(0.001, this.target()), ac.currentTime + 2.2);
+    loadBgm();                                    /* the bed covers the wait */
+    this.tick();
+    this.tmr = setInterval(()=>this.tick(), 220);
+  },
+  /* the track, looped on the audio clock through its own gain into the music bus */
+  playFile(){
+    const ac = AC; if(!ac || !BGM.buf || this.file) return;
+    /* Yasir: "60% isn't enough make it 80%"; still a quarter under speech, half under an effect */
+    this.file = true; this.LEVEL = 0.80; this.DUCK = 0.20; this.SFXDUCK = 0.40;
+    clearInterval(this.tmr); this.tmr = 0;         /* the bed schedules no new bars */
+    const t = ac.currentTime;
+    BGM.gain = ac.createGain(); BGM.gain.gain.setValueAtTime(0.0001, t);
+    BGM.gain.gain.exponentialRampToValueAtTime(1.0, t + 1.2);
+    BGM.gain.connect(MUSBUS);
+    const src = ac.createBufferSource(); src.buffer = BGM.buf; src.loop = true;
+    src.connect(BGM.gain); src.start(t + 0.02); BGM.src = src;
+    this.apply(0.4);                               /* whatever is speaking right now still wins */
+  },
+  /* [r78] the track as an <audio> element (see LOCAL). It cannot go through the music bus - an
+     element on a file:// is cross-origin to Web Audio and would play silence - so its volume is
+     set from the bus 25 times a second instead: the same 80 %, the same fade-in, the same duck
+     under every voice and effect. */
+  playEl(){
+    if(this.file || !AC || !MUSBUS) return;
+    this.file = true; this.LEVEL = 0.80; this.DUCK = 0.20; this.SFXDUCK = 0.40;
+    clearInterval(this.tmr); this.tmr = 0;
+    if(!BGM.el){ BGM.el = new Audio(BGM.url); BGM.el.loop = true; BGM.el.preload = "auto"; }
+    const el = BGM.el; el.volume = 0;
+    clearInterval(BGM.sync);
+    BGM.sync = setInterval(()=>{
+      try{ el.volume = Math.max(0, Math.min(1, MUSBUS.gain.value * MASTER.gain.value)); }catch(e){}
+    }, 40);
+    try{ const p = el.play(); if(p && p.catch) p.catch(()=>{}); }catch(e){}
+    this.apply(0.4);
+  },
+  stop(){
+    this.on = false; clearInterval(this.tmr); this.tmr = 0;
+    if(BGM.el){ const el = BGM.el;
+      setTimeout(()=>{ if(!MUSIC.on){ clearInterval(BGM.sync); try{ el.pause(); }catch(e){} } }, 450); }
+    if(AC && MUSBUS){
+      MUSBUS.gain.cancelScheduledValues(AC.currentTime);
+      MUSBUS.gain.setTargetAtTime(0.0001, AC.currentTime, 0.25);
+    }
+    /* the track stops after the fade, and a fresh one starts next time */
+    if(BGM.src){ const s0 = BGM.src, g0 = BGM.gain; BGM.src = null; BGM.gain = null;
+      try{ s0.stop((AC ? AC.currentTime : 0) + 1.2); }catch(e){}
+      setTimeout(()=>{ try{ g0.disconnect(); }catch(e){} }, 1500); }
+    this.file = false;
+  },
+  /* down while a word is being spoken, back up after - the lesson's voice comes first */
+  duck(on){ this.setDuck("voice", on); },       /* the game's own voice - see setDuck */
+  tick(){
+    const ac = AC; if(!ac || !this.on) return;
+    const beat = 60/this.BPM, barLen = beat*4;
+    while(this.next < ac.currentTime + 1.2){
+      const t = this.next - ac.currentTime, ch = this.pad[this.bar % this.pad.length];
+      ch.forEach(n => note({ f:sc(n), at:t, dur:barLen*1.05, vol:.035, type:"sine",
+                             open:3, detune:9, bus:MUSBUS }));
+      for(let i=0;i<8;i++){
+        const n = this.fig[(this.bar*3 + i) % this.fig.length];
+        note({ f:sc(n+12), at:t + i*beat/2, dur:.5, vol:(i%2?0.028:0.045),
+               tick:.4, open:8, bus:MUSBUS });
+      }
+      for(let i=0;i<4;i++)
+        whoosh({ at:t + i*beat + beat*0.5, from:5200, to:7200, dur:.07,
+                 vol:.014, q:3, bus:MUSBUS });
+      this.next += barLen; this.bar++;
+    }
+  }
+};
+window.MR_audioStop = function(){ try{ MUSIC.stop(); if(AC) AC.suspend(); }catch(e){} };
+/* [r71] the lesson around the game speaks too - its opening instruction plays while the music is
+   already running. It is ducked from the game loop, off the engine's own "a clip is playing"
+   flag (body.vo-lock), NOT off a timer: measured, the instruction can start seconds after the
+   game mounts, and a timer had already let the music back up by then. */
+let _lessonVO = false;
+function watchLessonVO(){
+  const on = !!(document.body && document.body.classList.contains("vo-lock"));
+  if(on !== _lessonVO){ _lessonVO = on; MUSIC.setDuck("lesson", on); }
+}
+
+const VOICE = {
+  mode: 2,
+  /* [r76] real recordings now - Gemini TTS, voice Leda, the lesson's own narrator. They were
+     never recorded before, so every line fell through to the device's TTS. Their own folder, and
+     the capital-free path matters: the lesson's folder is assets/Audio, and on a case-sensitive
+     server assets/audio is a different, empty, folder. */
+  dir: "assets/MatraRunner/voice/",
+  noFile: {},          // जिन id की mp3 नहीं मिली
+  queue: [], busy:false, hindi:null,
+
+  init(){
+    try{ const m = localStorage.getItem("matraRunnerVoice"); if(m!==null) this.mode = parseInt(m,10); }catch(e){}
+    this.pickVoice();
+    if(window.speechSynthesis) speechSynthesis.onvoiceschanged = ()=>this.pickVoice();
+  },
+  pickVoice(){
+    if(!window.speechSynthesis) return;
+    const v = speechSynthesis.getVoices();
+    this.hindi = v.find(x=>x.lang==="hi-IN") || v.find(x=>/^hi/.test(x.lang)) || null;
+  },
+  /* [r78] `gate`: the portal pair this word belongs to. It is told when its word has been heard
+     to the end (the world waits for that), and if the word is cut off it is asked for again. */
+  say(id, text, gate, onStart){        // कतार में जोड़ो
+    if(this.mode < 2){ if(gate) gate.heard = true; return; }
+    this.queue.push({id, text:text||LINES[id]||id, gate:gate||null, onStart:onStart||null});
+    this.pump();
+  },
+  clear(){
+    const cut = this.queue.concat(this.cur ? [this.cur] : []);
+    cut.forEach(it => { if(it.gate && !it.gate.heard) it.gate.spoken = false; });
+    this.queue.length = 0; this.busy = false; this.tok = (this.tok || 0) + 1; this.cur = null;
+    this.lastEnd = performance.now();
+    MUSIC.duck(false);
+    try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
+    if(this.src){ try{ this.src.stop(); }catch(e){} this.src = null; }
+    if(this.elA){ try{ this.elA.onended = this.elA.onerror = null; this.elA.pause(); }catch(e){} this.elA = null; }
+  },
+  /* [r76] THE CLIPS ARE DECODED INTO MEMORY AT BOOT and played through the game's own audio
+     engine, like the music and the effects. Two measured failures of the <audio> element route:
+     a clip created on first use had 700 ms to start or it fell back to the device's robotic TTS
+     (five words did, in one run, and were then marked missing for good); and warming 54 <audio>
+     elements does not work either - the browser capped them and fetched 33. A decoded buffer
+     starts in the same frame it is asked for. */
+  bufs: {}, loading: {}, tok: 0, lastEnd: 0,
+  /* [r79] ms since the game last said anything (0 while it is speaking or has lines waiting) */
+  quietFor(){ return (this.busy || this.queue.length) ? 0 : performance.now() - this.lastEnd; },
+  preload(){
+    if(this._pre) return;
+    const ac = audioReady(); if(!ac) return;
+    this._pre = true;
+    if(!this.bus){ this.bus = ac.createGain(); this.bus.gain.value = 1.1; this.bus.connect(MASTER); }
+    if(LOCAL) return;                     /* [r78] refused as a file: every line plays as an element */
+    const ids = Object.keys(LINES).concat(POOL_U.map(w => w[1]), POOL_UU.map(w => w[1]),
+                  /* [r115] the swapped-matra twins of the minimal pairs */
+                  ONLY_U.concat(ONLY_UU).filter(w => NO_TWIN.indexOf(w[1]) < 0).map(w => w[1] + "_x"));
+    ids.forEach(id => {
+      this.loading[id] = fetch(mrv(this.dir + id + ".ogg"))
+        .then(r => { if(!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+        .then(ab => new Promise((res, rej) => ac.decodeAudioData(ab, res, rej)))
+        .then(buf => { this.bufs[id] = buf; })
+        .catch(() => { this.noFile[id] = true; });
+    });
+  },
+  pump(){
+    this.preload();
+    if(this.busy || !this.queue.length || this.mode < 2) return;
+    const it = this.queue.shift(); this.busy = true; this.cur = it;
+    const tok = this.tok;
+    MUSIC.duck(true);                       /* the spoken word comes first; the bed steps back */
+    /* `tok` makes a line that was cut short by clear() unable to start the next one: without it a
+       stopped clip's ended event arrives AFTER the new line has begun, and two voices overlap */
+    let fired = false;
+    const next = ()=>{
+      if(fired || tok !== this.tok) return; fired = true;
+      if(it.gate) it.gate.heard = true;
+      this.busy = false; this.src = null; this.elA = null; this.cur = null; this.lastEnd = performance.now();
+      if(!this.queue.length) MUSIC.duck(false);
+      setTimeout(()=>this.pump(), 180);
+    };
+    let started = false;
+    const go = ()=>{
+      if(started || tok !== this.tok) return; started = true;
+      if(it.onStart){ try{ it.onStart(); }catch(e){} }     /* [r115] e.g. light the orb being read */
+      const buf = this.bufs[it.id];
+      if(buf && AC){
+        const src = AC.createBufferSource(); src.buffer = buf; src.connect(this.bus);
+        src.onended = next; this.src = src; src.start();
+      } else {
+        this.playEl(it, next, tok);         /* [r78] as a file, or the buffer failed: an element */
+      }
+    };
+    if(this.bufs[it.id] || this.noFile[it.id] || !this.loading[it.id]) go();
+    else {
+      /* still decoding (only possible in the first second after boot): wait for it, briefly */
+      this.loading[it.id].then(go, go);
+      setTimeout(go, 1500);
+    }
+  },
+  /* [r78] the recording through an <audio> element; the device's voice only if the file is truly
+     not there (it has no Hindi voice on most Windows machines, so that is silence) */
+  playEl(it, next, tok){
+    const a = new Audio(mrv(this.dir + it.id + ".ogg")); a.volume = 1;
+    this.elA = a;
+    let settled = false;
+    const fail = ()=>{
+      if(settled || tok !== this.tok) return; settled = true;
+      a.onended = a.onerror = null; try{ a.pause(); }catch(e){}
+      this.elA = null; this.tts(it.text, next);
+    };
+    a.onplaying = ()=>{ settled = true; };
+    a.onended = next; a.onerror = fail;
+    try{ const p = a.play(); if(p && p.catch) p.catch(fail); }catch(e){ fail(); }
+    setTimeout(fail, 3000);                 /* never started at all: do not hold the queue */
+    /* and a clip that started but never reports its end still lets the next line through */
+    a.addEventListener("loadedmetadata", ()=>{
+      if(isFinite(a.duration)) setTimeout(()=>{ if(this.elA === a) next(); }, a.duration*1000 + 1500);
+    });
+  },
+  tts(text, cb){
+    if(!window.speechSynthesis){ cb(); return; }
+    try{
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "hi-IN"; u.rate = 0.85; u.pitch = 1.05;
+      if(this.hindi) u.voice = this.hindi;
+      u.onend = cb; u.onerror = cb;
+      speechSynthesis.speak(u);
+      setTimeout(()=>{ if(!speechSynthesis.speaking) cb(); }, 4000);
+    }catch(e){ cb(); }
+  },
+  cycle(){
+    this.mode = (this.mode + 2) % 3;   // 2 -> 1 -> 0 -> 2
+    if(this.mode < 2) this.clear();
+    try{ localStorage.setItem("matraRunnerVoice", String(this.mode)); }catch(e){}
+    return this.mode;
+  },
+  icon(){ return ["\uD83D\uDD07","\uD83D\uDD08","\uD83D\uDDE3\uFE0F"][this.mode]; }
+};
+VOICE.init();
+
+function pick(arr, avoid){
+  const free = arr.filter(w=>avoid.indexOf(w[1])<0);
+  const src = free.length ? free : arr;
+  return src[Math.floor(Math.random()*src.length)];
+}
+function makeGateWords(target){
+  const r = pick(target===U ? ONLY_U : ONLY_UU, G.usedWords);
+  const w = pick(target===U ? ONLY_UU : ONLY_U, G.usedWords);
+  G.usedWords.push(r[1], w[1]); while(G.usedWords.length>14) G.usedWords.shift();
+  const set = [{t:r[0], id:r[1], ok:true},{t:w[0], id:w[1], ok:false}];
+  if(Math.random()<0.5) set.reverse();
+  return set;
+}
+
+/* [r113] THE SAME WORD TWICE, ONE MATRA DIFFERENT: the right word (it carries the level's matra, and it
+   is the one spoken) and that word with its first such matra swapped for the other - फूल / फुल,
+   पुल / पूल. The swapped one is only ever shown, never spoken, so it needs no recording. */
+/* [r115] the twins the voice model would not say (made-up words it refused) - these words are not used
+   as minimal pairs until their twin is recorded: then take them out of this list */
+const NO_TWIN = [];   /* [S03] filled in if the voice refuses a twin */
+function makePairWords(target){
+  const r = pick((target===U ? ONLY_U : ONLY_UU).filter(w => NO_TWIN.indexOf(w[1]) < 0), G.usedWords);
+  G.usedWords.push(r[1]); while(G.usedWords.length>14) G.usedWords.shift();
+  const other = target===U ? UU : U;
+  const twin = r[0].replace(target, other);
+  /* [r115] the twin has its own clip now (<id>_x) - it is read aloud after a first mistake */
+  const set = [{t:r[0], id:r[1], ok:true},{t:twin, id:r[1] + "_x", ok:false, twin:true}];
+  if(Math.random()<0.5) set.reverse();
+  return set;
+}
+
+/* ======================= decor / backdrop ======================= */
+let backdrop = null;
+function buildBackdrop(){
+  backdrop = document.createElement("canvas");
+  backdrop.width = Math.round(W*DPR); backdrop.height = Math.round(horizonY()*DPR+2*DPR);
+  const b = backdrop.getContext("2d");
+  b.setTransform(DPR,0,0,DPR,0,0);
+  const hy = horizonY();
+  const sky = b.createLinearGradient(0,0,0,hy);
+  sky.addColorStop(0,"#1b1740"); sky.addColorStop(.42,"#5a2f74");
+  sky.addColorStop(.72,"#c9552f"); sky.addColorStop(1,"#ffb45c");
+  b.fillStyle=sky; b.fillRect(0,0,W,hy+2);
+  // sun
+  const sx=W*0.5, sy=hy*0.93, sr=Math.min(W,H)*0.11;
+  const gl=b.createRadialGradient(sx,sy,sr*0.2,sx,sy,sr*3);
+  gl.addColorStop(0,"rgba(255,220,140,.95)"); gl.addColorStop(.35,"rgba(255,160,70,.45)");
+  gl.addColorStop(1,"rgba(255,120,40,0)");
+  b.fillStyle=gl; b.fillRect(0,0,W,hy+2);
+  b.fillStyle="#ffe6a8"; b.beginPath(); b.arc(sx,sy,sr,0,7); b.fill();
+  // stars
+  b.fillStyle="rgba(255,255,255,.7)";
+  for(let i=0;i<40;i++){ const x=(i*97.3)%W, y=(i*53.7)%(hy*0.4);
+    b.globalAlpha=0.25+((i*17)%10)/22; b.beginPath(); b.arc(x,y,1.1,0,7); b.fill(); }
+  b.globalAlpha=1;
+  // temple silhouette
+  function temple(cx,w,h,col){
+    b.fillStyle=col; b.beginPath();
+    b.moveTo(cx-w/2, hy); b.lineTo(cx-w*0.34, hy-h*0.62);
+    b.lineTo(cx-w*0.17, hy-h*0.62); b.lineTo(cx, hy-h);
+    b.lineTo(cx+w*0.17, hy-h*0.62); b.lineTo(cx+w*0.34, hy-h*0.62);
+    b.lineTo(cx+w/2, hy); b.closePath(); b.fill();
+    b.fillRect(cx-w*0.09, hy-h*0.30, w*0.18, h*0.30);
+  }
+  temple(W*0.5, W*0.36, hy*0.55, "#2a1b46");
+  temple(W*0.16, W*0.22, hy*0.34, "#20143a");
+  temple(W*0.86, W*0.24, hy*0.38, "#20143a");
+  // jungle canopy
+  b.fillStyle="#150f2e"; b.beginPath(); b.moveTo(0,hy+2);
+  for(let x=0;x<=W;x+=W/26){
+    const h = hy*0.10 + Math.abs(Math.sin(x*0.021))*hy*0.13;
+    b.lineTo(x, hy-h);
+  }
+  b.lineTo(W,hy+2); b.closePath(); b.fill();
+}
+/* [r40] THE ROADSIDE RAILING.
+   The reference's path is bounded by a low stone railing on both sides, and that one element is
+   what makes the road read as a road rather than as a lighter stripe on the grass. It is not
+   decor: decor is scattered at random depths and offsets, while a railing has to be a REGULAR
+   run at a FIXED offset, or it reads as a line of loose stones. So it gets its own list, evenly
+   spaced in z and recycled the same way, drawn at the edge of the path trapezoid. */
+/* 0.06, not 0.135: at the wider spacing the segments stood apart with grass showing between
+   them and read as scattered stone benches. Closer together they overlap in screen space near
+   the camera, which is what makes a railing look continuous. */
+const RAIL_STEP = 0.04;
+function seedRails(){
+  G.rails = [];
+  /* k is the segment's own number and never changes, so "a hedge every third post" keeps
+     selecting the same evenly-spaced subset however the array is later reordered */
+  let k = 0;
+  /* [r68] out to 2.05, not 1.25: the old railing faded out behind the treeline's skirt, but
+     the bridge's posts must keep coming out of the distance or the far half of the bridge is a
+     bare wall. The old railing still stops at HEDGE_FAR, so this changes nothing without it. */
+  for(let z = -0.05; z < 2.05; z += RAIL_STEP) G.rails.push({ z: z, k: k++ });
+}
+/* The hedge rides the railing's own z list, so the two can never drift apart, and is drawn
+   first - the kerb stands in front of the planting, not behind it. Copies overlap by a tenth
+   of their width, because the generated section has a faint edge at each end and butting them
+   exactly leaves a visible stitch every segment. */
+/* one segment every third post, and nothing behind the treeline's skirt */
+const HEDGE_EVERY = 3, HEDGE_FAR = 1.05;
+function drawHedge(r, i){
+  const art = window.MR_hedgeArt && MR_hedgeArt();
+  if(!art || r.z <= 0.002 || r.z > HEDGE_FAR || (i % HEDGE_EVERY)) return;
+  const {p, y} = proj(r.z);
+  const h = 96*S*p, w = h*((art.width/art.height) || 2.4) * 1.65;
+  const edge = LANE_W()*p*1.08 + w*0.24;
+  for(const sgn of [-1, 1]){
+    const x = worldX(0, p) + sgn*edge;
+    if(x < -w || x > W+w) continue;
+    ctx.drawImage(art, x-w/2, y-h, w, h);
+  }
+}
+function drawRail(r){
+  const art = window.MR_railArt && MR_railArt();
+  if(!art || r.z <= 0.002 || r.z > HEDGE_FAR) return;   /* past the skirt it is not visible */
+  const {p, y} = proj(r.z);
+  const h = 52*S*p, w = h*((art.width/art.height) || 2.1);
+  /* the same 1.08 half-width the path trapezoid is drawn with, pushed out by half a post so
+     the railing sits BESIDE the paving and not on top of it */
+  const edge = LANE_W()*p*1.08 + w*0.16;   /* just off the paving, not out in the undergrowth */
+  for(const sgn of [-1, 1]){
+    const x = worldX(0, p) + sgn*edge;
+    if(x < -w || x > W+w) continue;
+    ctx.save();
+    if(sgn > 0){ ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0); }
+    ctx.drawImage(art, x-w/2, y-h, w, h);
+    ctx.restore();
+  }
+}
+/* Trees carry the skyline at the edge of frame, so they get the majority; pillars punctuate
+   it and bushes fill between. One place, so seeding and recycling cannot disagree - they did
+   before, and a recycled verge slowly drifted to a different mix from the one it started with. */
+function decorKind(){
+  /* weighted harder to trees: they are the only thing tall enough to actually cover the
+     ground behind them, which is what "so that the grass is not visible" asks for */
+  const r = Math.random();
+  return r < 0.72 ? "tree" : r < 0.88 ? "bush" : "pillar";
+}
+function seedDecor(){
+  G.decor = [];
+  for(let i=0;i<54;i++){
+    G.decor.push({ z: Math.random(), side: Math.random()<0.5?-1:1,
+      kind: decorKind(),
+      off: 1.30 + Math.random()*2.10, hh: 0.85+Math.random()*0.5, hue: Math.random() });
+  }
+  G.decor.sort((a,b)=>b.z-a.z);
+}
+
+/* ======================= level control ======================= */
+function startLevel(i, spoken){
+  MUSIC.setDuck("veil", false);
+  VOICE.preload();
+  const L = LEVELS[i];
+  G.level=i; G.target = L.target || U;
+  /* [r113] a (re)start is slow; the levels after it carry their speed on (nextLevel) */
+  G.speedT = SPEED_START; G.speed = SPEED_START; G.between = false;
+  /* [r115] a (re)start keeps the words of the levels before it, and clears any celebration */
+  G.caught = G.caught.filter(c => c.lv < i); G.cel = false; celHide();
+  G.gates=[]; G.coins=[]; G.parts=[]; G.pops=[]; G.obs=[];
+  G.jumpT=0; G.slideT=0; G.hitT=0; tutHide();
+  G.cleared=0; G.right=0; G.wrong=0; G.missedWords=[]; G.usedWords=[]; G.pips=[];
+  G.lane=0; G.laneF=0; G.targetLane=0; G.shake=0; G.flash=0;
+  G.banner = null;                 /* [r113] no "स्तर 1" card: the levels run on into each other */
+  /* Held while the level's card is read, then eased up to speed. It counts ITSELF down: the
+     first version was lowered only by the lesson's voice-over callback, which fires once, so
+     every level after the first stayed at a fifth speed for ever. Nothing outside this can
+     leave it raised now - MR_begin() can only cut it short. */
+  G.hold = true; G.ramp = 0; G.holdT = (i === 0 ? 7.0 : (spoken ? 0.8 : 2.4));
+  VOICE.clear();
+  const goal = G.target===U ? "goal_e" : "goal_ai";
+  /* [r112] THE FIRST TIME, THE TUTORIAL COMES FIRST: after the lesson has spoken, three obstacles
+     teach the three moves, and only then is the goal spoken and the first words come */
+  const tutNow = (i === 0 && !G.tutDone);
+  /* [r77] measured: this line started at boot, in the same instant the lesson spoke its own
+     instruction for this page - two voices at once on every entry. The first level's goal now
+     waits until the lesson has finished speaking. */
+  if(tutNow){
+    G.tut = { step:0 };
+    whenLessonQuiet(function(){ if(G.tut && G.mode === "play"){ G.hold = false; G.holdT = 0; tutStep(1); } }, 12000);
+  }
+  else if(!spoken){
+    if(i === 0) whenLessonQuiet(function(){ if(G.level === 0 && G.mode === "play") VOICE.say(goal); }, 12000);
+    else VOICE.say(goal);
+  }
+  seedDecor(); seedRails();
+  /* further out than they were: the first choice must not arrive while the instruction is
+     still being spoken, or the child is answering a question they have not heard yet */
+  /* [r78] after the first level its goal has just been spoken over the veil, so its first pair
+     starts nearer: the first word follows the goal by about two seconds, not six */
+  const z0 = (i === 0 ? 1.75 : 1.00);
+  if(!tutNow){ spawnGate(z0); spawnGate(z0 + GATE_GAP); }
+  chipIn(G.target);
+  hud();
+  hideScreens(); G.mode="play";
+  MUSIC.start();
+}
+function setGoal(target){
+  const chip = document.getElementById("matraChip");
+  const isU = (target || G.target)===U;
+  chip.className = "matra " + (isU?"u":"uu");
+  chip.innerHTML = "<em>"+(isU?"ए":"ऐ")+"</em><span>"+(isU?U:UU)+"</span>";
+}
+
+/* [r78] THE SPACE BETWEEN TWO PAIRS OF PORTALS. Yasir: "after we catch one word we need some time
+   to listen and catch the other". It was 0.52 of the road - 3.4 s at level 1's speed, and the
+   feedback line alone takes one of those. Doubled: about 6.5 s from one pair to the next. */
+const GATE_GAP = 1.05;
+function spawnGate(z){
+  const L = LEVELS[G.level];
+  /* [r78] Yasir: both portals look the same - only the words differ */
+  const hue = [0, 0];
+  if(L.target===null){ G.target = Math.random()<0.5?U:UU; setGoal(); }
+  /* [r113] Yasir: "in each level 6 words; for the last two, both words are the same - only the matra
+     changes" (फूल / फुल). Which question this pair is: the words already caught + the pairs waiting. */
+  const q = G.cleared + G.gates.filter(x => !x.done).length;
+  const words = q >= L.gates - 2 ? makePairWords(G.target) : makeGateWords(G.target);
+  G.gates.push({ z: z, words: words, target:G.target, done:false, reveal:0,
+                 okLane:-1, hue: hue });
+  const g = G.gates[G.gates.length-1];
+  g.okLane = g.words.findIndex(w=>w.ok);
+  /* [r112] AFTER EVERY PAIR, ONE OBSTACLE, AND A TRAIL OF COINS BESIDE IT. The obstacle comes about
+     two seconds after the pair - once its "शाबाश" has been said and before the next word is - so the
+     child is never dodging while listening for the word. The coins run alongside it in the other
+     lane (a reward for moving), and are all collected before the next word is spoken. */
+  const o = spawnObstacle(z + OB_AT);
+  const cl = o.k === "block" ? 1 - o.lane : Math.floor(Math.random()*LANES);
+  /* [r115] Yasir: "increase the space between the coins" - 0.06 -> 0.11 of the road apart */
+  for(let i=0;i<4;i++){
+    G.coins.push({ z: z + OB_AT - 0.12 + i*0.11, lane: cl, got:false, spin: Math.random()*6 });
+  }
+}
+
+/* [r113] THE SPEED GROWS WITH THE CHILD. Yasir: "the speed starts slow and increases as the words are
+   collected; when she is hit by an obstacle or takes a wrong word she slows down slightly". One speed
+   for the whole game (the levels no longer reset it); a fall starts it slow again. It eases towards
+   its target - down quickly, back up gently. */
+/* [r115] Yasir: "currently it feels too slow - make it the normal pace it was earlier, and as she collects
+   words it increases". It starts at the old level-1 pace (0.155) and climbs to 0.22 over the 12 words. */
+const SPEED_START = 0.155, SPEED_STEP = 0.0055, SPEED_DROP = 0.012, SPEED_MIN = 0.14, SPEED_MAX = 0.22;
+function speedUp(){ G.speedT = Math.min(SPEED_MAX, G.speedT + SPEED_STEP); }
+function speedDown(){ G.speedT = Math.max(SPEED_MIN, G.speedT - SPEED_DROP); }
+/* [r113] the hanging matra: down on its rope, or back up out of sight */
+function chipIn(target){
+  const h = document.getElementById("hang"); if(!h) return;
+  setGoal(target);
+  h.classList.remove("out", "in"); void h.offsetWidth; h.classList.add("in");
+}
+function chipOut(){
+  const h = document.getElementById("hang"); if(!h) return;
+  h.classList.remove("in", "out"); void h.offsetWidth; h.classList.add("out");
+}
+
+/* [r112] THE OBSTACLES - Yasir: "obstacles just like Temple Run". Four, from the reference:
+     log, thorns - low: jump over (swipe up)
+     beam        - a log across two posts: slide under (swipe down)
+     block       - a carved stone block: go round it (swipe left / right)
+   Running into one costs a heart, as a wrong word does; three and she falls and the level restarts. */
+const OB_AT = 0.32;
+const OB_KINDS = [
+  { k:"log",    art:"obLog",    act:"jump",  w:0.92 },
+  { k:"thorns", art:"obThorns", act:"jump",  w:0.92 },
+  { k:"beam",   art:"obBeam",   act:"slide", w:1.02 },
+  { k:"block",  art:"obBlock",  act:"lane",  w:0.92 }
+];
+function spawnObstacle(z, kind, lane){
+  const pool = OB_KINDS.filter(o => o.k !== G.lastOb);
+  const K = kind ? OB_KINDS.find(o => o.k === kind) : pool[Math.floor(Math.random()*pool.length)];
+  G.lastOb = K.k;
+  const o = { z: z, k:K.k, art:K.art, act:K.act, w:K.w,
+              lane: (lane == null ? Math.floor(Math.random()*LANES) : lane),
+              done:false, ok:false, pin:false, fx:0 };
+  G.obs.push(o);
+  return o;
+}
+function resolveObstacle(o){
+  o.done = true;
+  if(o.lane !== G.lane) return;                                   /* went round it */
+  if(o.ok || (o.act === "jump" && G.jumpT > 0) || (o.act === "slide" && G.slideT > 0) || o.tut){
+    sparkle(laneX(o.lane, 1), groundY() - 120*S, 10);            /* cleared it: a little shine */
+    return;
+  }
+  /* ran into it: it is knocked aside, and goes on past her like everything else on the bridge */
+  o.kickT = 0.0001;
+  G.hearts--; G.hitT = 0.65; G.jumpT = 0; G.slideT = 0; speedDown();
+  G.shake = 0.35; G.flashCol = "rgba(150,130,110,.18)"; G.flash = 0.3;
+  dust(laneX(G.lane, 1), groundY() - 60*S, 22);
+  sfxBonk(); VOICE.say("hit");
+  hud();
+  if(G.hearts <= 0) gameOver();
+}
+
+/* [r112] THE TUTORIAL. Three steps, each an obstacle in her lane: it comes up, the run stops just
+   in front of it, the hand shows the move and the line is spoken, and it carries on the moment the
+   child makes that move. A move made early, as the obstacle approaches, counts too. Nothing in the
+   tutorial costs a heart. Then «बहुत बढ़िया! अब खेल शुरू करते हैं।», the goal, and the first words. */
+const TUT = [
+  { act:"lane",  ob:"block", vo:"tut_lane",  cls:"side" },
+  { act:"jump",  ob:"log",   vo:"tut_jump",  cls:"up"   },
+  { act:"slide", ob:"beam",  vo:"tut_slide", cls:"down" }
+];
+const TUT_SPEED = 0.8, TUT_FREEZE_Z = 0.16, TUT_CATCHUP = 2.6;   /* [r113] 2.6: the run now starts slower */
+function tutStep(n){
+  const T = G.tut; if(!T) return;
+  if(n > TUT.length){
+    T.step = 0; T.ob = null;
+    VOICE.clear(); VOICE.say("tut_go");
+    whenVoiceDone(tutEnd, 900, 4000);
+    return;
+  }
+  T.step = n; T.done = false; T.frozen = false; T.prompted = false; T.passT = 0;
+  T.ob = spawnObstacle(0.62, TUT[n - 1].ob, G.targetLane);
+  T.ob.tut = true;
+}
+function tutUpdate(dt){
+  const T = G.tut; if(!T) return 1;
+  if(!T.ob) return TUT_SPEED;
+  const s = TUT[T.step - 1];
+  /* [r124] THE OBSTACLE STAYS IN ITS LANE. Yasir: "if the obstacle is ahead of me and I move left/
+     right, the obstacle also moves as I move, which should not happen". It used to be re-placed in
+     her lane every frame until the hint came up. It now stays where it was put; on the jump and
+     slide steps she cannot change lane at all (see move()), and on the lane step a child who has
+     already stepped out of its way has done the very thing being taught. */
+  if(s.act === "lane" && !T.done && T.ob.lane !== G.targetLane){
+    T.done = true; T.ob.ok = true; tutHide();
+  }
+  if(!T.prompted && !T.done && T.ob.z <= 0.34){
+    T.prompted = true; tutShow(s.cls); VOICE.clear(); VOICE.say(s.vo);
+  }
+  /* a jump or slide made early still has to be in the air / on the ground as it goes by */
+  if(T.done && T.ob.z <= 0.075 && !T.ob.done){
+    if(s.act === "jump" && G.jumpT <= 0) jump(true);
+    if(s.act === "slide" && G.slideT <= 0) slide(true);
+  }
+  if(!T.done && T.ob.z <= TUT_FREEZE_Z) T.frozen = true;
+  if(T.frozen) return 0;
+  /* the move has been made: the run catches up with the obstacle so it is cleared by THIS jump or
+     slide (0.16 of the road in about 0.6 s), instead of the jump ending before it arrives */
+  if(T.done && !T.ob.done && s.act !== "lane") return TUT_CATCHUP;
+  if(T.ob.done){                                   /* past it: a breath, then the next step */
+    T.passT += dt;
+    if(T.passT > 0.7) tutStep(T.step + 1);
+  }
+  return TUT_SPEED;
+}
+function tutDid(act){
+  const T = G.tut; if(!T || !T.ob || T.done) return;
+  if(TUT[T.step - 1].act !== act) return;
+  if(T.ob.z > 0.40) return;                        /* not before the obstacle is in sight */
+  T.done = true; T.frozen = false; T.ob.ok = true;
+  tutHide();
+  note({f:sc(31), dur:.25, vol:.12, open:12}); note({f:sc(36), at:.08, dur:.35, vol:.10, open:12});
+}
+function tutEnd(){
+  if(!G.tut || G.mode !== "play") return;
+  G.tut = null; G.tutDone = true; tutHide();
+  VOICE.say(G.target === U ? "goal_e" : "goal_ai");
+  spawnGate(1.35); spawnGate(1.35 + GATE_GAP);
+}
+function tutShow(cls){ const el = document.getElementById("tut"); if(el) el.className = "tut on " + cls; tutPlace(); }
+/* [r124] the hand's anchor, over Swifty's head - in CSS px of the stage (the canvas is measured in
+   screen px, which differ from CSS px wherever the lesson's stage is scaled) */
+function tutPlace(){
+  const el = document.getElementById("tut"); if(!el || el.className.indexOf(" on") < 0) return;
+  const a = document.getElementById("tutAnchor"); if(!a) return;
+  const k = (cvs.offsetWidth || W) / (W || 1);
+  a.style.left = (laneX(G.laneF, 1) * k) + "px";
+  a.style.top  = ((groundY() - 170 * S - 14 * S) * k) + "px";
+}
+function tutHide(){ const el = document.getElementById("tut"); if(el) el.className = "tut"; }
+
+/* ======================= input ======================= */
+function move(dir){
+  if(G.mode!=="play" || G.cel) return;
+  /* [r124] while the tutorial is teaching a jump or a slide, left and right do nothing - the
+     obstacle is in her lane and stays there, and stepping round it would skip the lesson */
+  if(G.tut && G.tut.ob && !G.tut.ob.done && TUT[G.tut.step - 1] && TUT[G.tut.step - 1].act !== "lane") return;
+  const n = Math.max(0, Math.min(LANES-1, G.targetLane + dir));
+  if(n!==G.targetLane){ G.targetLane=n; whoosh({from:700,to:2200,dur:.13,vol:.05,q:2}); tutDid("lane"); }
+}
+/* [r112] JUMP AND SLIDE. `quiet` is the tutorial carrying out a move the child has already made */
+const JUMP_DUR = 0.78, SLIDE_DUR = 0.85;
+function jump(quiet){
+  if(G.mode!=="play" || G.cel || G.jumpT > 0 || G.hitT > 0) return;
+  G.slideT = 0; G.jumpT = 0.0001;
+  if(!quiet){ whoosh({from:450,to:1700,dur:.24,vol:.07,q:1.4}); tutDid("jump"); }
+}
+function slide(quiet){
+  if(G.mode!=="play" || G.cel || G.slideT > 0 || G.hitT > 0) return;
+  G.jumpT = 0; G.slideT = 0.0001;
+  if(!quiet){ whoosh({from:1500,to:380,dur:.3,vol:.07,q:1.1}); tutDid("slide"); }
+}
+window.addEventListener("keydown", e=>{
+  if(e.key==="ArrowLeft"||e.key==="a"||e.key==="A"){ move(-1); e.preventDefault(); }
+  else if(e.key==="ArrowRight"||e.key==="d"||e.key==="D"){ move(1); e.preventDefault(); }
+  else if(e.key==="ArrowUp"||e.key==="w"||e.key==="W"){ jump(); e.preventDefault(); }
+  else if(e.key==="ArrowDown"||e.key==="s"||e.key==="S"){ slide(); e.preventDefault(); }
+  else if(e.key===" "||e.key==="Enter"){
+    const vis = document.querySelector(".screen.on .btn");
+    if(vis){ vis.click(); e.preventDefault(); }
+  }
+});
+document.querySelectorAll(".arrow").forEach(el=>{
+  const fire = e=>{ e.preventDefault();
+    if(el.dataset.act === "jump") jump(); else if(el.dataset.act === "slide") slide();
+    else move(parseInt(el.dataset.dir,10)); };
+  el.addEventListener("pointerdown", fire);
+});
+/* [r112] SWIPES, as in Temple Run: up = jump, down = slide, left / right = change lane. A swipe acts
+   as soon as the finger has travelled 26 px - it does not wait for the release. A touch that never
+   travels is a tap, and a tap on the left or right half still changes lane, as before. */
+let swp = null;
+document.querySelectorAll(".pad").forEach(el=>{
+  el.addEventListener("pointerdown", e=>{ e.preventDefault();
+    swp = { x:e.clientX, y:e.clientY, dir:parseInt(el.dataset.dir,10), id:e.pointerId, done:false };
+    try{ el.setPointerCapture(e.pointerId); }catch(_){} });
+  el.addEventListener("pointermove", e=>{
+    if(!swp || swp.done || e.pointerId !== swp.id) return;
+    const dx = e.clientX - swp.x, dy = e.clientY - swp.y;
+    if(Math.abs(dx) < 26 && Math.abs(dy) < 26) return;
+    swp.done = true;
+    if(Math.abs(dy) > Math.abs(dx)){ if(dy < 0) jump(); else slide(); }
+    else move(dx > 0 ? 1 : -1);
+  });
+  el.addEventListener("pointerup", e=>{ if(!swp || e.pointerId !== swp.id) return;
+    if(!swp.done) move(swp.dir); swp = null; });
+  el.addEventListener("pointercancel", ()=>{ swp = null; });
+});
+// swipe
+let sx0=null;
+cvs.addEventListener("pointerdown", e=>{ sx0=e.clientX; });
+cvs.addEventListener("pointerup", e=>{
+  if(sx0===null) return;
+  const dx = e.clientX - sx0; sx0=null;
+  if(Math.abs(dx)>40) move(dx>0?1:-1);
+});
+
+/* ======================= gameplay update ======================= */
+function resolveGate(g){
+  g.done = true; g.reveal = 1;
+  /* PINNED. Left to carry on it would keep approaching, and the projection turns the last
+     tenth of z into several screens' worth of arch sliding at the camera. Stopped here, the
+     reaction plays at the place she actually passed through. */
+  g.pin = true; g.fx = 0; g.chosenLane = G.lane;
+  const chosen = g.words[G.lane];
+  /* [r101] Yasir: "for an incorrect answer don't switch to the next question - show the same question
+     again". Only a RIGHT answer finishes a question: it counts towards the level and fills a progress
+     dot. A wrong one costs a heart and its question comes back on the next pair of portals. */
+  if(chosen && chosen.ok){ G.cleared++; G.pips.push(true); }
+  if(chosen && chosen.ok){
+    G.right++; G.score += 100 + G.right*10; speedUp();
+    G.caught.push({ t: chosen.t, lv: G.level, target: g.target });    /* [r115] for the celebration */
+    G.flashCol="rgba(120,255,190,.22)"; G.flash=0.35;
+    sparkle(laneX(G.lane,1), groundY()-235*S, 44);
+    /* [r124] Yasir: «in case of correct word don't say "शाबाश", read the correct word» - and no
+       text card («remove these text card from the game») */
+    sfxGate(true); sfxRight(); VOICE.clear(); VOICE.say(chosen.id, chosen.t);
+  }else{
+    G.wrong++; G.hearts--; speedDown();
+    const rightWord = g.words[g.okLane].t;
+    G.missedWords.push(rightWord);
+    G.shake = 0.30; G.flashCol="rgba(150,130,110,.18)"; G.flash=0.3;
+    dust(laneX(G.lane,1), groundY()-95*S, 26);
+    /* [r115] the answer is no longer given away on the spot: «फिर से देखिए।», and the pair comes back -
+       read aloud (both words after a first mistake, the right one after a second) */
+    /* [r124] no «फिर से देखिए!» card - the voice still says it */
+    sfxGate(false); sfxWrong(); sfxBonk(); VOICE.clear(); VOICE.say("wrong"); G.afterWrong = true;
+    if(G.hearts<=0){ gameOver(); return; }
+    repeatQuestion(g);
+  }
+  hud();
+  const L = LEVELS[G.level];
+  /* [r79] the level's last "शाबाश!" is heard out before the transition begins - it used to be
+     cut off by it, in the same instant the level-up chime and "वाह! ..." started */
+  if(G.cleared >= L.gates){ whenVoiceDone(levelDone, 1100, 3000); }
+  else if(G.between){ /* [r113] between two levels: no new pairs until the next goal has been said */ }
+  /* [r78] never more pairs than the level has: the spare one used to arrive at the end of every
+     level, and its word could slip in between the last "शाबाश" and "वाह! ..." */
+  else if(G.cleared + G.gates.filter(x => !x.done).length < L.gates)
+    spawnGate(Math.max(1.0, (G.gates.length?Math.max.apply(null,G.gates.map(x=>x.z)):0) + GATE_GAP));
+}
+
+/* [r101] the same question on the next pair of portals: the same two words, their sides dealt again
+   (so the child reads them rather than just switching lanes). The pair already waiting up the track
+   takes them; if there is none, one is made. Its word is spoken as it comes near, as for any pair. */
+function repeatQuestion(g){
+  const words = g.words.map(w => ({ t:w.t, id:w.id, ok:w.ok }));
+  if(Math.random() < 0.5) words.reverse();
+  let nx = G.gates.filter(x => !x.done).sort((a, b) => a.z - b.z)[0];
+  if(!nx){
+    spawnGate(Math.max(1.0, (G.gates.length ? Math.max.apply(null, G.gates.map(x => x.z)) : 0) + GATE_GAP));
+    nx = G.gates[G.gates.length - 1];
+  }
+  nx.words = words; nx.target = g.target; nx.okLane = words.findIndex(w => w.ok);
+  nx.spoken = false; nx.heard = false; nx.waitT = 0; nx.repeat = true;
+  nx.err = (g.err || 0) + 1;                       /* [r115] how many times this question was missed */
+}
+
+/* gold, rising, slow to fade - the reward for getting through */
+function sparkle(x,y,n){
+  for(let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, sp=(40+Math.random()*190)*S;
+    G.parts.push({x:x+(Math.random()-0.5)*90*S, y:y+(Math.random()-0.5)*70*S,
+      vx:Math.cos(a)*sp*0.7, vy:Math.sin(a)*sp*0.5 - (70+Math.random()*90)*S,
+      life:.7+Math.random()*.6, grav:-40*S, twinkle:true,
+      col: Math.random()<0.5 ? "#ffe07a" : "#fff6d0", r:(2+Math.random()*4.5)*S});
+  }
+}
+/* grey, heavy, gone quickly - a scuff, not a punishment */
+function dust(x,y,n){
+  for(let i=0;i<n;i++){
+    const a = -Math.PI*0.5 + (Math.random()-0.5)*2.2, sp=(40+Math.random()*130)*S;
+    G.parts.push({x:x+(Math.random()-0.5)*70*S, y,
+      vx:Math.cos(a)*sp, vy:Math.sin(a)*sp*0.6, life:.35+Math.random()*.3, grav:260*S,
+      col: Math.random()<0.5 ? "rgba(178,166,150,.75)" : "rgba(146,134,118,.65)",
+      r:(4+Math.random()*7)*S});
+  }
+}
+function burst(x,y,col,n){
+  for(let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, s=(60+Math.random()*220)*S;
+    G.parts.push({x,y, vx:Math.cos(a)*s, vy:Math.sin(a)*s-120*S, life:.5+Math.random()*.5,
+      col, r:(2+Math.random()*4)*S});
+  }
+}
+
+function update(dt){
+  if(G.frozen) return;
+  G.t += dt;
+  /* [r114] the run cycle's PHASE is accumulated, frame by frame (see below) */
+  if(G.mode!=="play"){ G.dashT += dt*0.3; G.runPh = (G.runPh || 0) + dt/2.2;
+    /* [r115] in the celebration she glides to the middle of the bridge */
+    if(G.mode === "win") G.laneF += (0.5 - G.laneF) * (1 - Math.exp(-dt * 3));
+    /* [r115] the celebration's sparkles still fly */
+    for(const p of G.parts){ p.life-=dt; p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy += (p.grav === undefined ? 900*S : p.grav)*dt; }
+    G.parts = G.parts.filter(p=>p.life>0);
+    return; }
+  G.dashT += dt*G.speed;
+
+  // lane easing
+  /* exponential, so a slow frame moves her the same distance a fast one does - the old
+     linear factor made the glide speed depend on how long the last frame happened to take */
+  G.laneF += (G.targetLane - G.laneF) * (1 - Math.exp(-dt*9));
+  if(Math.abs(G.laneF-G.targetLane)<0.06) G.lane = G.targetLane;
+  else G.lane = Math.round(G.laneF);
+
+  /* [r50] THE INTRO. Held, the world drifts at a fifth of speed - she is still running and
+     the road is still moving, because a frozen frame under a voice-over reads as a game that
+     failed to load. Released, the speed eases in over about a second instead of snapping on. */
+  if(G.hold && (G.holdT -= dt) <= 0) G.hold = false;
+  if(!G.hold) G.ramp = Math.min(1, G.ramp + dt*0.95);
+  /* [r78] AND IT IS HEARD BEFORE THE PAIR ARRIVES. After a wrong answer the feedback ("सही शब्द
+     है ...") is three to four seconds long, and the next word queues behind it. If that word has
+     not been heard to the end by the time its pair is two-thirds of the way in, the world eases
+     to a fifth of its speed - as it does under the level's intro - until it has (at most 7 s). */
+  const fg = G.gates.find(x => !x.done);
+  /* [r102] NO SLOWING DOWN. Yasir: "after a mistake the character slows down for a fraction of a
+     second - we don't need it". It was this wait (above): the long wrong-answer feedback made the next
+     word late, and the run eased to a fifth of its speed until it had been heard. Since r101 that next
+     pair repeats the word the feedback has just said, so the run keeps its speed always. */
+  void fg;
+  G.waitF = 1;
+  /* [r113] towards the target speed - down quickly, back up gently */
+  if(G.cel) G.speed *= Math.exp(-dt * 2.4);          /* [r115] the run-out before the celebration */
+  else if(G.speedT){ G.speed += (G.speedT - G.speed) * (1 - Math.exp(-dt * (G.speedT < G.speed ? 3.0 : 0.8))); }
+  /* [r112] the tutorial runs the world at its own pace, and stops it in front of each obstacle */
+  const tf = tutUpdate(dt);
+  tutPlace();
+  const v = G.speed * (G.hold ? 0.20 : 0.20 + 0.80*G.ramp) * dt * G.waitF * tf;
+  /* [r114] Yasir: "when the speed increases, at the start her legs feel jittery or too fast". The
+     stride was frame = floor(G.t * 16 / cycle): with the cycle now changing with the speed, the product
+     of a large G.t and a changing rate jumps every frame - the legs skipped and whirled. Now the phase
+     ADVANCES each frame by dt / cycle, so a change of speed changes how fast the legs go and never jumps
+     them; and the cycle follows how fast the WORLD is actually moving - a slow jog while the run is
+     held at the start or stopped in the tutorial, quickening smoothly with the speed. */
+  const _eff = v / Math.max(dt, 1e-4);
+  G.runPh = (G.runPh || 0) + dt / Math.max(0.78, Math.min(1.6, 1.05 * 0.155 / Math.max(1e-4, _eff)));
+  if(G.jumpT > 0 && (G.jumpT += dt) >= JUMP_DUR) G.jumpT = 0;
+  if(G.slideT > 0 && (G.slideT += dt) >= SLIDE_DUR) G.slideT = 0;
+  if(G.hitT > 0) G.hitT = Math.max(0, G.hitT - dt);
+  /* [r112] obstacles: a jump or slide that is under way while it is right on her clears it */
+  for(const o of G.obs){
+    if(o.kickT) o.kickT += dt;
+    o.z -= v;
+    if(!o.done && o.z <= 0.07 && o.lane === G.lane &&
+       ((o.act === "jump" && G.jumpT > 0) || (o.act === "slide" && G.slideT > 0))) o.ok = true;
+    if(!o.done && o.z <= 0) resolveObstacle(o);
+    if(G.mode !== "play") break;
+  }
+  /* [r113] Yasir: "the obstacle disappears after crossing - it should not". It runs on past her, growing
+     as it comes towards the camera, until it has left the bottom of the screen. */
+  G.obs = G.obs.filter(o => o.z > -0.22);
+  if(G.mode !== "play") return;                  /* she fell over one: nothing else this frame */
+  // gates
+  for(const g of G.gates){
+    if(g.pin) g.fx += dt; else g.z -= v;
+    /* [r78] THE WORD TO CATCH IS SPOKEN FOR THE NEXT PAIR ONLY. It used to be spoken at a fixed
+       distance - which, with the pairs this close, was while the pair before was still ahead -
+       and passing that pair stopped the voice for its "शाबाश" and cut the new word off. So from
+       the second pair on, no target word was ever heard. Now it is asked for once the pair in
+       front has been passed, and queues behind that pair's feedback. */
+    /* [r79] Yasir: "when we reach near the portal it should play the VO of the word". And it
+       waits for 0.7 s of quiet: after a wrong answer the feedback ends on the PREVIOUS pair's
+       right word ("सही शब्द है पूजा"), and the new target followed it within 0.3 s - two words
+       back to back, which is exactly what "it plays both words" sounds like. */
+    if(!g.spoken && !g.done && g.z<=0.62 && G.gates.find(x => !x.done) === g &&
+       VOICE.quietFor() >= (G.afterWrong ? 600 : 700) && !document.body.classList.contains("vo-lock")){   /* [r102] 1500 -> 600: no slow-down to wait for it now */
+      g.spoken = true; G.afterWrong = false;  /* after "सही शब्द है ..." a longer beat: a new word */
+      /* [r115] Yasir: "before collecting words don't play any VO; after one error both options' VOs play;
+         after two errors the correct answer's VO plays". So a fresh pair is silent - the child reads it;
+         the pair that comes back after a first mistake reads both its words, left then right, each orb
+         lighting up as its word is said; after a second mistake only the right word is said. */
+      const err = g.err || 0;
+      if(err === 0) g.heard = true;
+      else if(err === 1){
+        g.words.forEach(function(w, li){
+          VOICE.say(w.id, w.t, li === g.words.length - 1 ? g : null,
+                    function(){ g.sayLane = li; g.sayT = performance.now(); });
+        });
+      }
+      else {
+        const tw = g.words.find(w => w.ok) || g.words[0];
+        VOICE.say(tw.id, tw.t, g);
+      }
+    }
+    if(!g.done && g.z<=0.035) resolveGate(g);
+  }
+  G.gates = G.gates.filter(g => g.pin ? g.fx < 0.36 : g.z > -0.18);
+  // coins
+  for(const c of G.coins){
+    c.z -= v; c.spin += dt*5;
+    if(!c.got && c.z<=0.02 && c.lane===G.lane){
+      c.got=true; G.score+=25; sfxCoin(); hud();
+      burst(laneX(c.lane,1), groundY()-110*S, "#ffcb45", 14);
+    }
+  }
+  G.coins = G.coins.filter(c=>c.z>-0.1 && !c.got);
+  /* the ground texture travels with everything else, in z. Kept bounded because it is
+     multiplied up into texture pixels every frame and a session should not drift into the
+     range where a float stops being able to tell two rows apart. */
+  G.ground = (G.ground + v) % 4096;
+  // railing recycle - evenly spaced, so a segment is put back exactly one run behind the last
+  for(const r of G.rails){ r.z -= v; if(r.z < -0.05) r.z += RAIL_STEP*G.rails.length; }
+  /* SORTED BY DEPTH, every frame. A segment that wraps to the back keeps its slot in the
+     array, so array order stops meaning depth order within a second of starting - and the
+     painter's algorithm then draws far posts over near ones, popping on every wrap. */
+  G.rails.sort((a,b)=>b.z-a.z);
+  // decor recycle
+  for(const d of G.decor){
+    d.z -= v;
+    if(d.z<-0.06){ d.z += 1.06 + Math.random()*0.2; d.side = Math.random()<0.5?-1:1;
+      d.kind = decorKind();
+      d.off = 1.30+Math.random()*2.10; d.hh=0.85+Math.random()*0.5; }
+  }
+  G.decor.sort((a,b)=>b.z-a.z);
+  // fx
+  for(const p of G.parts){ p.life-=dt; p.x+=p.vx*dt; p.y+=p.vy*dt;
+    p.vy += (p.grav === undefined ? 900*S : p.grav)*dt; }
+  G.parts = G.parts.filter(p=>p.life>0);
+  for(const p of G.pops) p.life -= dt;
+  G.pops = G.pops.filter(p=>p.life>0);
+  if(G.banner){ G.banner.life-=dt; if(G.banner.life<=0) G.banner=null; }
+  G.shake = Math.max(0, G.shake-dt*1.3);
+  G.flash = Math.max(0, G.flash-dt*1.6);
+
+
+}
+
+/* ======================= drawing ======================= */
+function drawGround(){
+  /* [r38] tiled art floor when tex_grass/tex_path are present */
+  if(window.MR_drawGroundArt && MR_drawGroundArt()) return;
+  const hy=horizonY(), gy=groundY();
+  // ground base
+  const gr = ctx.createLinearGradient(0,hy,0,H);
+  gr.addColorStop(0,"#1d3d2e"); gr.addColorStop(.5,"#16482f"); gr.addColorStop(1,"#0f2f21");
+  ctx.fillStyle=gr; ctx.fillRect(0,hy,W,H-hy);
+
+  // path trapezoid
+  const pFar = proj(26), pNear = proj(0);
+  const wFar = LANE_W()*pFar.p*roadHalf(), wNear = LANE_W()*pNear.p*roadHalf();
+  ctx.beginPath();
+  const cFar = worldX(0, pFar.p), cNear = worldX(0, pNear.p);
+  ctx.moveTo(cFar-wFar, pFar.y); ctx.lineTo(cFar+wFar, pFar.y);
+  ctx.lineTo(cNear+wNear, H); ctx.lineTo(cNear-wNear, H); ctx.closePath();
+  const pg = ctx.createLinearGradient(0,hy,0,H);
+  pg.addColorStop(0,"#8a5f34"); pg.addColorStop(1,"#c98f52");
+  ctx.fillStyle=pg; ctx.fill();
+
+  // moving bands
+  ctx.save(); ctx.clip();
+  const sp=0.075, frac=(G.dashT/sp)%1;
+  for(let k=0;k<26;k++){
+    const z0=(k-frac)*sp, z1=z0+sp*0.5;
+    if(z1<0) continue;
+    const a=proj(Math.max(0,z0)), b2=proj(Math.max(0,z1));
+    const wa=LANE_W()*a.p*1.08, wb=LANE_W()*b2.p*1.08;
+    ctx.fillStyle = k%2 ? "rgba(255,255,255,.055)" : "rgba(60,30,10,.075)";
+    const ca = worldX(0, a.p), cb = worldX(0, b2.p);
+    ctx.beginPath(); ctx.moveTo(cb-wb,b2.y); ctx.lineTo(cb+wb,b2.y);
+    ctx.lineTo(ca+wa,a.y); ctx.lineTo(ca-wa,a.y); ctx.closePath(); ctx.fill();
+  }
+  // lane grooves
+  ctx.beginPath();
+  ctx.moveTo(cFar, pFar.y); ctx.lineTo(cNear, H);
+  ctx.strokeStyle="rgba(90,55,20,.4)"; ctx.lineWidth=2*S; ctx.stroke();
+  ctx.restore();
+
+  // path glow edges - only while there is no railing to mark the edge for real
+  if(!(window.MR_railArt && MR_railArt())){
+    ctx.strokeStyle="rgba(255,203,69,.22)"; ctx.lineWidth=3*S;
+    ctx.beginPath(); ctx.moveTo(cFar-wFar,pFar.y); ctx.lineTo(cNear-wNear,H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cFar+wFar,pFar.y); ctx.lineTo(cNear+wNear,H); ctx.stroke();
+  }
+}
+
+function drawDecor(d){
+  if(d.z<=0.001) return;
+  const {p,y} = proj(d.z);
+  const x = worldX(d.side*d.off, p);
+  const h = 150*S*p*d.hh, w = 46*S*p*d.hh;
+  ctx.save();
+  /* [r38] painted tree/bush/pillar when one is present; the drawn shapes remain */
+  const _da = window.MR_decorArt && MR_decorArt(d.kind, (d.off*977)|0);
+  if(_da){
+    /* [r39] Each kind gets its own scale. h is the height of the SHAPE this function draws
+       when there is no art, and the drawn bush is a flat ellipse about a third of it while
+       the drawn tree fills it - so one blanket multiplier (it was 1.5) made every bush as
+       tall as a tree and every tree half again too big for the path it stands beside. */
+    /* [r50] Roughly twice what it was. The old sizes were set against a drawn silhouette
+       and left the verge reading as open ground with ornaments on it; the mockup has trees
+       taller than the gates crowding both edges of the frame. */
+    /* Trees and pillars raised on request. K multiplies the height of the silhouette this
+       function would draw without art, and the width follows from each picture's own ratio -
+       so these grow taller and proportionally wider, they do not stretch. */
+    const K = d.kind==="bush" ? 1.05 : d.kind==="pillar" ? 3.10 : 3.45;
+    let dh = h*K, dw = dh*(_da.width/_da.height||0.7);
+    /* the clamp has to rise with them: it shrinks BOTH dimensions to fit, so leaving it where
+       it was would have quietly cancelled most of the extra height on the widest trees */
+    const wmax = LANE_W()*p*2.85;
+    if(dw > wmax){ dh *= wmax/dw; dw = wmax; }
+    /* [r51] CULLED ON ITS DRAWN WIDTH, which it never was: the old test dropped anything whose
+       CENTRE lay more than 120px outside the canvas, and now that a near tree can be two thirds
+       of the screen across, that threw away trees the child could still half see - they popped
+       out of existence at the edge of frame. It also kept drawing ones entirely off it. */
+    if(x + dw/2 < 0 || x - dw/2 > W){ ctx.restore(); return; }
+    ctx.drawImage(_da, x-dw/2, y-dh, dw, dh);
+    ctx.restore(); return;
+  }
+  if(d.kind==="pillar"){
+    ctx.fillStyle="#6b5b7d"; ctx.fillRect(x-w*0.32,y-h,w*0.64,h);
+    ctx.fillStyle="#544567"; ctx.fillRect(x-w*0.46,y-h-h*0.07,w*0.92,h*0.09);
+    ctx.fillStyle="rgba(120,255,200,.45)";
+    ctx.beginPath(); ctx.arc(x, y-h*0.55, 3.2*S*p, 0, 7); ctx.fill();
+  }else if(d.kind==="tree"){
+    ctx.fillStyle="#3b2a22"; ctx.fillRect(x-w*0.11,y-h*0.9,w*0.22,h*0.9);
+    ctx.fillStyle= d.hue>0.5 ? "#1f6b46":"#175439";
+    for(let i=0;i<3;i++){
+      ctx.beginPath();
+      ctx.ellipse(x, y-h*(0.72+i*0.14), w*(0.85-i*0.16), h*0.19, 0,0,7); ctx.fill();
+    }
+  }else{
+    ctx.fillStyle="#17563a";
+    ctx.beginPath(); ctx.ellipse(x,y-h*0.13,w*0.72,h*0.16,0,0,7); ctx.fill();
+    ctx.fillStyle="rgba(120,255,210,"+(0.35+0.3*Math.sin(G.t*2+d.off*4))+")";
+    ctx.beginPath(); ctx.arc(x-w*0.2,y-h*0.2,2.6*S*p,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+w*0.25,y-h*0.26,2.2*S*p,0,7); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawCoin(c){
+  if(c.z<=0.005) return;
+  const {p,y} = proj(c.z);
+  const x = laneX(c.lane,p);
+  /* [r112] Yasir: "make the coins a little bigger so they are noticeable" - 15 -> 25, higher, a
+     brighter glow, and the painted coin turns on its axis */
+  /* [r117] Yasir: "make the coins a little bigger" - 25 -> 33 */
+  const r = 33*S*p, bob = Math.sin(G.t*4+c.spin)*6*S*p;
+  const cy = y - 90*S*p + bob;
+  ctx.save();
+  ctx.shadowColor="rgba(255,214,90,.95)"; ctx.shadowBlur=26*p;
+  const _cf = window.MR_coinFrame && MR_coinFrame();
+  if(_cf){
+    const s2 = r*2*Math.max(0.35, Math.abs(Math.cos(c.spin*0.6)));
+    ctx.drawImage(_cf.img, _cf.r[0],_cf.r[1],_cf.r[2],_cf.r[3], x-s2/2, cy-r, s2, r*2);
+  } else if(IMG.coin){
+    const s2 = r*2*Math.max(0.3, Math.abs(Math.cos(c.spin)));
+    ctx.drawImage(IMG.coin, x-s2/2, cy-r, s2, r*2);
+    ctx.restore(); return;
+  }
+  const wobble = Math.abs(Math.cos(c.spin));
+  ctx.fillStyle="#ffcb45";
+  ctx.beginPath(); ctx.ellipse(x,cy, r*Math.max(0.22,wobble), r, 0,0,7); ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.fillStyle="rgba(255,255,255,.55)";
+  ctx.beginPath(); ctx.ellipse(x-r*0.25*wobble, cy-r*0.3, r*0.18*wobble, r*0.3,0,0,7); ctx.fill();
+  ctx.restore();
+}
+
+var MR_gateWordOnly = false, MR_wordFade = 1;
+
+/* [r59] THE PORTAL'S LIGHT, drawn rather than painted.
+   `hue` is 0 for the green portal and 1 for the golden one; `t` is 0..1 through the burst when
+   one has been entered. The swirl counter-rotates against the outer glow so the disc reads as
+   moving without anything actually travelling - a rotating sprite would need a sheet. */
+const PORTAL_HUE = [[120,255,190], [255,214,96]];
+
+/* The golden portal is the SAME ring washed warm. source-atop is bounded by whatever is
+   already on the canvas, so doing it on an offscreen that holds only the ring keeps the wash
+   inside the leaves instead of painting a square over the scene. Built once, not per frame. */
+var _goldRing = null;
+function goldRing(img){
+  if(_goldRing) return _goldRing;
+  var c = document.createElement("canvas");
+  c.width = img.width; c.height = img.height;
+  var g = c.getContext("2d");
+  g.drawImage(img, 0, 0);
+  g.globalCompositeOperation = "source-atop";
+  g.fillStyle = "rgba(255,196,64,0.46)";
+  g.fillRect(0, 0, c.width, c.height);
+  _goldRing = c;
+  return c;
+}
+function portalGlow(cx, cy, r, hue, lit, t){
+  const c = PORTAL_HUE[hue] || PORTAL_HUE[0];
+  const col = (a) => "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + a + ")";
+  const pulse = 1 + 0.035*Math.sin(G.t*2.2 + hue*2);
+  const rr = r * pulse * (1 + 0.55*t);
+  const fade = 1 - t*t;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  /* the body of the light */
+  const g1 = ctx.createRadialGradient(cx, cy, rr*0.05, cx, cy, rr);
+  g1.addColorStop(0,    col(0.95*fade));
+  g1.addColorStop(0.55, col(0.55*fade));
+  g1.addColorStop(0.85, col(0.22*fade));
+  g1.addColorStop(1,    col(0));
+  ctx.fillStyle = g1;
+  ctx.beginPath(); ctx.ellipse(cx, cy, rr, rr*1.02, 0, 0, 7); ctx.fill();
+  /* two slow arcs, turning opposite ways */
+  ctx.lineCap = "round";
+  for(let k=0;k<2;k++){
+    const dir = k ? -1 : 1, a0 = G.t*dir*(0.5+0.22*k) + hue*1.7 + k*2.1;
+    ctx.strokeStyle = col((0.30 - 0.08*k) * fade);
+    ctx.lineWidth = rr*(0.12 - 0.04*k);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rr*(0.62 - 0.17*k), rr*(0.60 - 0.17*k), a0, 0.4, 4.2);
+    ctx.stroke();
+  }
+  if(lit){                       /* the flare when this is the one she went through */
+    ctx.fillStyle = "rgba(255,255,245," + (0.75*(1-t)) + ")";
+    ctx.beginPath(); ctx.ellipse(cx, cy, rr*0.52*(1-t*0.4), rr*0.52*(1-t*0.4), 0, 0, 7); ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* the pool of light the portal casts on the path */
+function portalPool(cx, y, w, hue, t){
+  const c = PORTAL_HUE[hue] || PORTAL_HUE[0];
+  const a = (1 - t) * 0.5;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  const g = ctx.createRadialGradient(cx, y, 1, cx, y, w*0.62);
+  g.addColorStop(0, "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + a + ")");
+  g.addColorStop(1, "rgba(" + c[0] + "," + c[1] + "," + c[2] + ",0)");
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.ellipse(cx, y, w*0.62, w*0.17, 0, 0, 7); ctx.fill();
+  ctx.restore();
+}
+
+/* leaves drifting off the ring - a path, not a sprite, so they take the portal's colour */
+function portalLeaves(cx, cy, r, hue, alpha){
+  const c = PORTAL_HUE[hue] || PORTAL_HUE[0];
+  ctx.save();
+  for(let i=0;i<7;i++){
+    const ph = G.t*0.55 + i*0.92 + hue*1.3;
+    const a  = ph % 6.283;
+    const rad = r*(1.02 + 0.22*((ph*0.31) % 1));
+    const x = cx + Math.cos(a)*rad, y = cy + Math.sin(a)*rad*0.98 - ((ph*9) % (r*0.5));
+    const sz = r*0.085, rot = ph*1.4;
+    ctx.globalAlpha = alpha * (0.35 + 0.45*Math.abs(Math.sin(ph)));
+    ctx.fillStyle = "rgb(" + c[0] + "," + c[1] + "," + c[2] + ")";
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+    ctx.beginPath();
+    ctx.moveTo(0, -sz);
+    ctx.quadraticCurveTo(sz*0.8, -sz*0.15, 0, sz);
+    ctx.quadraticCurveTo(-sz*0.8, -sz*0.15, 0, -sz);
+    ctx.fill(); ctx.restore();
+  }
+  ctx.restore();
+}
+
+
+/* [r56] THE BURST ITSELF. Drawn over the gate as it goes: a ring of light expanding from the
+   opening and a flash on the arch. Without it the gate simply vanishes, and vanishing is what
+   a bug looks like - the ring is what tells the child something was DONE, not undone. */
+function drawGateBurst(g, cx, y, gw, gh, ok){
+  const t = Math.min(1, g.fx/0.36);
+  if(t >= 1) return;
+  const e = 1 - Math.pow(1-t, 3);                  /* fast out, easing off */
+  const r = gw*(0.20 + 0.95*e), a = (1-t)*(1-t);
+  const col = ok ? "255,225,140" : "190,175,155";
+  ctx.save();
+  ctx.globalCompositeOperation = ok ? "lighter" : "source-over";
+  ctx.strokeStyle = "rgba("+col+","+(a*0.85)+")";
+  ctx.lineWidth = Math.max(1, gw*0.055*(1-t));
+  ctx.beginPath(); ctx.ellipse(cx, y-gh*0.46, r, r*0.62, 0, 0, 7); ctx.stroke();
+  if(ok){
+    const gl = ctx.createRadialGradient(cx, y-gh*0.46, 1, cx, y-gh*0.46, r*1.1);
+    gl.addColorStop(0, "rgba(255,240,190,"+(a*0.5)+")");
+    gl.addColorStop(1, "rgba(255,220,130,0)");
+    ctx.fillStyle = gl;
+    ctx.beginPath(); ctx.ellipse(cx, y-gh*0.46, r*1.1, r*0.7, 0, 0, 7); ctx.fill();
+  }
+  ctx.restore();
+}
+/* [r112] THE WORD ORB, from Yasir's reference: a glowing golden orb with two leaves, floating at chest
+   height in its lane, its word written on it by the game. Run into it to catch the word. The right
+   one bursts bigger and fades in a shine; a wrong one shakes, dulls and shrinks; and when she took the
+   wrong one, the right one gives a gentle pulse so the child sees which it was. Never red. */
+function drawOrb(g, i, img, p, y){
+  /* [r120] Yasir: "remove the fruits - the words should only be in the card". The golden orb is gone: the
+     word's card alone floats at chest height in its lane, and everything the orb did, the card does - the
+     right one swells and fades in a shine, a wrong one shakes, dulls and shrinks, the one being read out
+     swells and glows, and when she took the wrong one the right one gives a pulse. */
+  const w = g.words[i], cx0 = laneX(i, p);
+  const base = LANE_W()*p*0.56;                       /* the size the orb had - the card keeps its scale */
+  const t = g.done ? Math.min(1, g.fx/0.36) : 0;
+  const chosen = g.done && i === g.chosenLane;
+  const bob = Math.sin(G.t*2.4 + i*1.7)*6*S*p;
+  let sc = 1, alpha = 1, dx = 0;
+  if(g.done){
+    if(chosen && w.ok){ sc = 1 + 0.55*t; alpha = 1 - t; }
+    else if(chosen){ sc = 1 - 0.25*t; alpha = 1 - t*t; dx = Math.sin(g.fx*58)*12*S*p*(1-t); }
+    else if(w.ok){ sc = 1 + 0.14*Math.sin(t*Math.PI); alpha = 1 - t*t; }
+    else alpha = 1 - t;
+  }
+  const reading = !g.done && g.sayLane === i && performance.now() - (g.sayT || 0) < 950;
+  if(reading) sc *= 1.12;
+  const lit = (g.done && w.ok) || reading;
+  ctx.save();
+  ctx.globalAlpha *= Math.max(0, alpha);
+  /* [r130] Yasir: "the height of each word card should be the same - width can change with the length
+     of the word - and there should be some space from all sides". The card's HEIGHT and its PADDING are
+     now fixed by the lane (H0), never by the word: a long word used to shrink its font to fit, and the
+     card shrank with it (height and padding were both multiples of the font size). Now only the width
+     follows the word; a word too long even for the widest card (1.2x the old orb) gets a smaller font
+     inside the SAME card, so every card is the same height with the same margin round its word. */
+  const H0 = base*0.31*sc;                               /* the nominal glyph size for every card */
+  const padX = H0*0.62, ch = H0*1.85;                    /* side padding, fixed card height */
+  const maxW = base*1.2*sc;
+  let fs = Math.max(8, H0);
+  ctx.font = "800 " + fs + 'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+  for(let k = 0; k < 14 && ctx.measureText(w.t).width + padX*2 > maxW; k++){
+    fs *= 0.93; ctx.font = "800 " + fs + 'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+  }
+  const tw = ctx.measureText(w.t).width;
+  const cw = Math.max(tw + padX*2, ch*1.25);
+  const ccx = cx0 + dx, ccy = y - 118*S*p + bob, bw = Math.max(1.5, ch*0.10), rr = ch*0.24;
+  /* its shadow on the stones below, and a warm glow round it */
+  ctx.fillStyle = "rgba(60,30,5,.20)";
+  ctx.beginPath(); ctx.ellipse(cx0, y - 3*S*p, cw*0.42, 8*S*p, 0, 0, 7); ctx.fill();
+  const R = Math.max(cw, ch)*0.85;
+  const rg = ctx.createRadialGradient(ccx, ccy, ch*0.3, ccx, ccy, R);
+  rg.addColorStop(0, lit ? "rgba(255,240,150,.80)" : "rgba(255,228,140,.35)");
+  rg.addColorStop(1, "rgba(255,222,120,0)");
+  ctx.fillStyle = rg; ctx.fillRect(ccx - R, ccy - R, R*2, R*2);
+  /* the card: an orange-tan frame with a thin dark edge round a cream face (Yasir's sample) */
+  ctx.save();
+  ctx.shadowColor = "rgba(70,35,5,.35)"; ctx.shadowBlur = ch*0.18; ctx.shadowOffsetY = ch*0.06;
+  roundRect(ccx - cw/2, ccy - ch/2, cw, ch, rr);
+  const fg = ctx.createLinearGradient(0, ccy - ch/2, 0, ccy + ch/2);
+  fg.addColorStop(0, "#f2a85a"); fg.addColorStop(1, "#d9823a");
+  ctx.fillStyle = fg; ctx.fill();
+  ctx.restore();
+  ctx.lineWidth = Math.max(1, bw*0.28); ctx.strokeStyle = "#8f4f1c";
+  roundRect(ccx - cw/2, ccy - ch/2, cw, ch, rr); ctx.stroke();
+  roundRect(ccx - cw/2 + bw, ccy - ch/2 + bw, cw - bw*2, ch - bw*2, rr*0.7);
+  const cg = ctx.createLinearGradient(0, ccy - ch/2, 0, ccy + ch/2);
+  cg.addColorStop(0, "#fff8e8"); cg.addColorStop(1, "#f6e6c6");
+  ctx.fillStyle = cg; ctx.fill();
+  ctx.lineWidth = Math.max(0.8, bw*0.22); ctx.strokeStyle = "rgba(160,92,36,.55)"; ctx.stroke();
+  /* [r130] ONE BASELINE FOR EVERY CARD: the space between the tallest top matra (ि) and the deepest
+     bottom one (ू) is centred in the card, so a word with ू does not ride higher than one without,
+     and both keep the same margin above and below */
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  const rm = ctx.measureText("किकू");
+  const asc = rm.actualBoundingBoxAscent || fs*0.95, desc = rm.actualBoundingBoxDescent || fs*0.45;
+  ctx.fillStyle = "#5a2a08";
+  ctx.fillText(w.t, ccx, ccy + (asc - desc)/2);
+  /* [r134] Yasir: when a missed pair comes back and its words are read aloud, "highlight the matra of
+     both the words". From the first mistake on (g.err >= 1) each card's ु / ू is drawn again in the
+     highlight orange, clipped to the band under the baseline of its own syllable - which holds only the
+     matra (no word in this game has रु / रू, whose matra sits beside the letter) - so the rest of the
+     word, a nukta in the next syllable included, keeps its colour. Every occurrence (बुलबुल has two). */
+  if((g.err || 0) >= 1){
+    const by = ccy + (asc - desc)/2, left = ccx - tw/2;
+    /* [S03] े / ै sit ABOVE the headline, so the band is the one over the consonant's own top
+       (its ink ascent), from the top of the card down - the headline and the letter keep their colour */
+    const re = /[ेै]/g; let mt;
+    while((mt = re.exec(w.t))){
+      let cs = mt.index - 1;
+      if(cs > 0 && w.t[cs] === "़") cs--;             /* a nukta belongs to its consonant */
+      const x0 = left + ctx.measureText(w.t.slice(0, cs)).width - fs*0.10;
+      const x1 = left + ctx.measureText(w.t.slice(0, mt.index + 1)).width + fs*0.12;
+      const top = by - (ctx.measureText(w.t[cs]).actualBoundingBoxAscent || fs*0.7) + fs*0.01;
+      ctx.save();
+      ctx.beginPath(); ctx.rect(x0, ccy - ch, x1 - x0, top - (ccy - ch)); ctx.clip();
+      ctx.fillStyle = "#FF8A00";
+      ctx.fillText(w.t, ccx, by);
+      ctx.restore();
+    }
+  }
+  /* the wrong one she took goes dull */
+  if(chosen && !w.ok){
+    ctx.save(); ctx.globalCompositeOperation = "multiply";
+    ctx.globalAlpha *= 0.45 * Math.min(1, g.fx/0.06);
+    ctx.fillStyle = "#8a8a8a";
+    roundRect(ccx - cw/2, ccy - ch/2, cw, ch, rr); ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+/* [r112] an obstacle, standing on the bridge in its lane; it fades as it passes her */
+function drawObstacle(o){
+  if(o.z <= -0.22) return;
+  const img = window.MR_ART && MR_ART.img(o.art);
+  const {p, y} = proj(Math.max(-0.22, o.z));
+  /* knocked aside when she ran into it: it slides out towards the parapet, tipping a little */
+  const k = o.kickT ? Math.min(1, o.kickT/0.35) : 0;
+  const side = o.lane === 0 ? -1 : 1;
+  const x = laneX(o.lane, p) + side*k*LANE_W()*p*0.75;
+  const w = LANE_W()*p*o.w, h = img ? w*img.height/img.width : w*0.4;
+  const a = Math.max(0, Math.min(1, (1.25 - o.z)*2.6));
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.fillStyle = "rgba(40,24,8,.30)";
+  ctx.beginPath(); ctx.ellipse(x, y - 2*p, w*0.47, 11*S*p, 0, 0, 7); ctx.fill();
+  ctx.translate(x, y); ctx.rotate(side*k*0.22);
+  if(img) ctx.drawImage(img, -w/2, -h, w, h);
+  else { ctx.fillStyle = "#7a5a3a"; roundRect(-w/2, -h, w, h, 10*S*p); ctx.fill(); }
+  ctx.restore();
+}
+function drawGate(g){
+  if(g.z<=-0.05) return;
+  const {p,y} = proj(Math.max(0.002,g.z));
+  const aw = LANE_W()*p*0.84, ah = 210*S*p, top = y-ah;
+  const fade = Math.min(1, (1.25-g.z)*2.6);
+  ctx.save();
+  ctx.globalAlpha = Math.max(0, Math.min(1, fade));
+
+  const _orbImg = true;                 /* [r120] the word card - needs no art */
+  for(let i=0;i<LANES;i++){
+    if(_orbImg){ drawOrb(g, i, _orbImg, p, y); continue; }   /* [r112] the orb replaces the portal */
+    const cx = laneX(i,p);
+    const w = g.words[i];
+    let col = "#9a7bff", glow="rgba(154,123,255,.55)";
+    if(g.done && g.reveal>0){
+      if(w.ok){ col="#4bf0a5"; glow="rgba(75,240,165,.85)"; }
+      else    { col="#ff6a4a"; glow="rgba(255,106,74,.8)"; }
+    }
+    /* [r38] THE PAINTED ARCH, when gate_neutral/correct/wrong are present. The word is still
+       drawn by the game below - the art's plaque is deliberately blank - so only the frame and
+       the curtain are replaced here. */
+    var _ring = window.MR_ringArt && MR_ringArt();
+    var _box = null;
+    if(_ring){
+      /* [r60] THE PORTAL.
+         One ring, an empty hole, and everything that varies painted into it: the light, the
+         colour, the word. The hole is where the glow and the word go, and its radius is a
+         fraction of the ring's own width, so the two stay locked together at any depth. */
+      /* 0.78 of the lane spacing, not 0.94: portal centres are LANE_W*p apart, so at 0.94 the
+         two rings overlapped and their glows ran into one another - one wide smear of light
+         with two words in it rather than a choice between two doors.
+         The opening's centre and radius are MEASURED off portal_ring.webp (hole centred at
+         0.508 / 0.496 of the image, radius 0.311 of its width) rather than guessed, so the
+         light sits in the hole at every depth. */
+      var rw = LANE_W()*p*0.78, rh = rw*((_ring.height/_ring.width) || 1);
+      var cyR = y - rh*0.504;
+      var hole = rw*0.311;
+      var t = g.done ? Math.min(1, g.fx/0.36) : 0;
+      var gfade = 1 - t*t;
+      var hue = (g.hue && g.hue[i]) || 0;
+      var chosen = g.done && i === g.chosenLane;
+
+      /* the pool it throws on the path, then the light inside it, then the ring over both */
+      portalPool(cx, y - rh*0.02, rw*0.42, hue, t);
+      portalGlow(cx, cyR, hole, hue, g.done && w.ok, t);
+
+      var pop = g.done ? (w.ok ? 1 + 0.48*t : 1 + 0.10*t) : 1;
+      var jig = (g.done && !w.ok && chosen) ? Math.sin(g.fx*58) * 13*S*p * (1-t) : 0;
+      var dw2 = rw*pop, dh2 = rh*pop, cxj = cx + jig;
+
+      ctx.save();
+      ctx.globalAlpha *= gfade;
+      ctx.drawImage(hue === 1 ? goldRing(_ring) : _ring, cxj-dw2/2, y-dh2, dw2, dh2);
+      if(g.done && !w.ok && chosen){
+        /* the one she chose wrongly goes dull - multiply is bounded by the art's own alpha,
+           so only the ring darkens and not a rectangle of the scene behind it */
+        ctx.save();
+        ctx.globalCompositeOperation = "multiply";
+        ctx.globalAlpha = 0.5 * Math.min(1, g.fx/0.06) * (1-t);
+        ctx.drawImage(_ring, cxj-dw2/2, y-dh2, dw2, dh2);
+        ctx.restore();
+      }
+      ctx.restore();
+
+      portalLeaves(cxj, cyR, hole, hue, gfade * (g.done ? 1-t : 0.85));
+
+      _box = { cx: cxj, cy: cyR, w: hole*1.72, h: hole*0.86 };
+      MR_gateWordOnly = true;
+      MR_wordFade = gfade;
+    } else {
+      MR_wordFade = 1;
+      MR_gateWordOnly = false;
+    }
+    // arch
+    if(!MR_gateWordOnly){
+    ctx.lineWidth = Math.max(1.5, 9*S*p);
+    ctx.strokeStyle = col;
+    ctx.shadowColor = glow; ctx.shadowBlur = (g.done? 30:18)*p;
+    ctx.beginPath();
+    ctx.moveTo(cx-aw/2, y);
+    ctx.lineTo(cx-aw/2, top+ah*0.30);
+    ctx.quadraticCurveTo(cx-aw/2, top, cx, top);
+    ctx.quadraticCurveTo(cx+aw/2, top, cx+aw/2, top+ah*0.30);
+    ctx.lineTo(cx+aw/2, y);
+    ctx.stroke();
+    // curtain
+    ctx.shadowBlur=0;
+    ctx.fillStyle = g.done && g.reveal>0
+      ? (w.ok?"rgba(75,240,165,.16)":"rgba(255,106,74,.16)")
+      : "rgba(90,60,170,.14)";
+    ctx.beginPath();
+    ctx.moveTo(cx-aw/2, y); ctx.lineTo(cx-aw/2, top+ah*0.30);
+    ctx.quadraticCurveTo(cx-aw/2, top, cx, top);
+    ctx.quadraticCurveTo(cx+aw/2, top, cx+aw/2, top+ah*0.30);
+    ctx.lineTo(cx+aw/2, y); ctx.closePath(); ctx.fill();
+    }   /* end !MR_gateWordOnly */
+
+    // word plate
+    let fs, py;
+    if(_box){
+      /* [r40] SHRINK TO FIT THE PLANK. A fixed 42*S*p was set when the game drew its own
+         plaque and sized the plaque to the text; the painted plank is a fixed shape, so the
+         text has to give way instead. Start at a size proportional to the plank and step down
+         until the word sits inside the cream face with a margin on both sides - a five-letter
+         word and a two-letter word then both read, and neither runs over the wooden frame. */
+      fs = Math.max(8, _box.h*0.46);
+      ctx.font = "700 "+fs+'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+      for(let k=0; k<12 && ctx.measureText(w.t).width > _box.w*0.74; k++){
+        fs *= 0.92;
+        ctx.font = "700 "+fs+'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+      }
+      py = _box.cy;
+    } else {
+      fs = Math.max(8, 42*S*p);
+      ctx.font = "700 "+fs+'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+      const tw = ctx.measureText(w.t).width;
+      const pw = Math.max(tw+26*S*p, aw*0.55), ph = fs*1.62;
+      py = top + ah*0.42;
+      ctx.fillStyle="rgba(14,10,32,.82)";
+      roundRect(cx-pw/2, py-ph/2, pw, ph, 12*S*p); ctx.fill();
+      ctx.strokeStyle= col; ctx.lineWidth=Math.max(1,2.5*S*p); roundRect(cx-pw/2,py-ph/2,pw,ph,12*S*p); ctx.stroke();
+    }
+    /* Dark ink on the cream plank; the pale ink below is for the dark plaque the game draws
+       for itself when there is no art. */
+    ctx.fillStyle = _box ? (g.done ? (w.ok ? "#14532b"
+                                    : (i === g.chosenLane ? "#7a2411" : "#4a3f2c")) : "#2e2410")
+                         : (g.done&&g.reveal>0 ? (w.ok?"#d8ffee":"#ffd9d0") : "#fff4de");
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.save(); ctx.globalAlpha *= MR_wordFade;
+    ctx.fillText(w.t, cx, py+fs*0.06);
+    ctx.restore();
+
+    /* [r53] No verdict mark. A gold star and a red cross were stamped over the two signs at
+       the exact moment the child should be reading the words on them - the feedback covered
+       the thing it was feedback about. The gate's own pop, glow, shake and grey say the same
+       and leave the words legible. */
+  }
+  ctx.restore();
+}
+function roundRect(x,y,w,h,r){
+  r = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+}
+
+/* ---- अपनी कला (assets/img) — मिले तो वही, वरना बना हुआ शेर ---- */
+/* ======================= ART LAYER =======================
+   [r38] Painted assets instead of code-drawn ones - and only where a file is actually there.
+
+   Every slot below falls back to the drawing the game already does. That is not timidity: the
+   brief says "most of the images" are made, so a half-filled folder is the NORMAL state here,
+   not an error case. A missing file must look like today's game, never like a hole.
+
+   Filenames and sizes are exactly the ones in the art spec, so the files can be dropped into
+   assets/MatraRunner/ with no renaming:
+
+     swifty_run.webp     1076x420   4 frames of 269x420, back view run cycle
+     swifty_lean_left.webp         swifty_lean_right.webp
+     swifty_stumble.webp           swifty_cheer.webp
+     bg_sky.webp          1920x720   bg_temples.png 1920x500   bg_canopy.png 1920x300
+     tex_grass.webp        512x512   tex_path.webp  512x512    (both tile)
+     tree_1..3.png         400x600   bush_1..2.png 400x250     pillar_1..2.png 250x600
+     gate_neutral.png      600x800   gate_correct.png  gate_wrong.png   plate.png 600x220
+     coin_spin.png         768x128   6 frames of 128x128       coin.png
+     ui_*.png / heart_*.png / star_*.png / ico_*.png           (the HUD is DOM, see below)
+
+   The HUD is HTML, not canvas, so its art is handed to CSS as custom properties on .mr-root.
+   Each rule reads `var(--mr-x, <what it does now>)`, so an absent file leaves today's styling
+   untouched - no class toggling, no flash while loading. */
+(function(){
+  "use strict";
+  var DIR = "assets/MatraRunner/";
+  var A = {};                       // name -> HTMLImageElement, only once it has really loaded
+  /* [r126] how many of the game's pictures have answered (loaded OR failed) - the curtain waits for
+     all of them, not just the first four, so the child never sees the code-drawn stand-ins */
+  window.MR_artSettled = 0; window.MR_artTotal = 0;
+  var settle = function(){ window.MR_artSettled++; };
+
+  /* name: [file, framesAcross] */
+  var SHEET = {
+    /* [r39] The hero is SWIFTY - the same bird the child has followed for seventeen screens.
+       A tiger was specified, but a second mascot appearing once, in the last activity, reads
+       as a different game; the run cycle is four frames on a common baseline. */
+    run:      ["swifty_run.webp", 16],
+    leanL:    ["swifty_lean_left.webp", 1],
+    leanR:    ["swifty_lean_right.webp", 1],
+    stumble:  ["swifty_stumble.webp", 1],
+    cheer:    ["swifty_cheer.webp", 1],
+    /* the reference sheet's two end-of-run poses, seen from the FRONT - the run poses are all
+       back views, and at the moment the run stops the child should finally see her face */
+    fall:     ["swifty_fall.webp", 16],
+    hit:      ["swifty_hit.webp", 1],
+    happy:    ["swifty_happy.webp", 1],
+    sky:      ["bg_sky.webp", 1],
+    /* [r68] the valley: its poster frame (shown until the video can play), and the bridge */
+    valley:   ["bg_valley.webp", 1],
+    deck:     ["bridge_deck.webp", 1],
+    post:     ["bridge_post.webp", 1],
+    wall:     ["bridge_wall.webp", 1],
+    /* [r112] the orb replaces the portal ring (portal_ring.webp is no longer loaded) */
+    /* [r120] orb.webp no longer loaded - the word sits on its card alone */
+    obLog:    ["ob_log.webp", 1],    obThorns: ["ob_thorns.webp", 1],
+    obBlock:  ["ob_block.webp", 1],  obBeam:   ["ob_beam.webp", 1],
+    jump:     ["swifty_jump.webp", 1], slide:  ["swifty_slide.webp", 1],
+    bump:     ["swifty_bump.webp", 1],
+    mountains:["bg_mountains.webp", 1],
+    hills:    ["bg_hills.webp", 1],
+    grass:    ["tex_grass.webp", 1],
+    path:     ["tex_path.webp", 1],
+    tree1:    ["tree_1.webp", 1], tree2: ["tree_2.webp", 1], tree3: ["tree_3.webp", 1],
+    bush1:    ["bush_1.webp", 1], bush2: ["bush_2.webp", 1],
+    pillar1:  ["pillar_1.webp", 1], pillar2: ["pillar_2.webp", 1],
+    gateN:    ["gate_neutral.webp", 1],
+    gateC:    ["gate_correct.webp", 1],
+    gateW:    ["gate_wrong.webp", 1],
+    plate:    ["plate.webp", 1],
+    rail:     ["rail.webp", 1],
+    hedge:    ["hedge.webp", 1],
+    lantern:  ["lantern.webp", 1],
+    coinSpin: ["coin.webp", 1],
+    heart:    ["heart_full.webp", 1], heartOff: ["heart_empty.webp", 1],
+    star:     ["star_full.webp", 1],  starOff:  ["star_empty.webp", 1],
+  };
+  /* The panel/button/chip art was never drawn, so the HUD keeps its own styling for those.
+     Hearts and stars ARE drawn, but they are swapped in from hud() rather than through a CSS
+     variable: an <img> only appears once the file has really loaded, so a missing or slow
+     file leaves the glyph that is there today instead of an empty box. */
+  var UI = {
+    "--mr-ui-panel": "ui_banner.webp",   /* the long wooden banner behind the prompt */
+    "--mr-ui-badge": "ui_badge.webp",    /* the round wooden medallion the matra sits in */
+    "--mr-ui-btn":   "ui_btn.webp"       /* the little wooden key */
+    /* --mr-ui-board is gone: it asked for panel.webp, which has never existed in the repo.
+       The level cards draw their board through --mr-card-bg, which points at panel2.webp. */
+  };
+
+
+  window.MR_ART = {
+    has: function(n){ return !!A[n]; },
+    img: function(n){ return A[n] || null; },
+    frames: function(n){ return (SHEET[n] && SHEET[n][1]) || 1; },
+    /* one frame of a horizontal strip, as source-rect numbers for drawImage */
+    rect: function(n, i){
+      var im = A[n]; if(!im) return null;
+      var f = this.frames(n), w = im.width / f;
+      return [Math.floor((i % f) * w), 0, w, im.height];
+    },
+    /* the src the DOM can use, only for a slot whose file has loaded */
+    src: function(n){ return A[n] ? A[n].src : null; }
+  };
+
+  Object.keys(SHEET).forEach(function(name){
+    var im = new Image();
+    im.onload = function(){
+      if(im.naturalWidth > 0) A[name] = im;
+      /* [r50] REPAINT THE HUD WHEN ITS ART LANDS. hud() writes <img> hearts only if the files
+         have already loaded, and it runs once at boot. That was safe while the game booted in
+         the voice-over's callback, six seconds in; booting on arrival, hud() now runs BEFORE
+         the hearts exist and the child gets the fallback glyph - which renders white, so the
+         row looked like three lives already spent. */
+      if((name === "heart" || name === "heartOff") && typeof hud === "function") hud();
+    };
+    window.MR_artTotal++;
+    im.addEventListener("load", settle, { once:true }); im.addEventListener("error", settle, { once:true });
+    im.src = mri(DIR + SHEET[name][0]);
+  });
+
+  /* the DOM-side art: each property is only set once its file has loaded */
+  var root = document.querySelector(".mr-root") || document.documentElement;
+  var uiLeft = Object.keys(UI).length;
+  Object.keys(UI).forEach(function(prop){
+    var im = new Image();
+    im.onload = im.onerror = function(){
+      if(im.naturalWidth > 0) root.style.setProperty(prop, 'url("' + mri(DIR + UI[prop]) + '")');
+      /* the wooden look goes on only when EVERY piece of it is there - half a wooden HUD
+         beside half a dark one looks like a bug, and a slow file would show it happening */
+      if(uiLeft === 1) window.MR_skinReady = true;   /* [r77] every HUD piece has answered: the curtain may lift */
+      if(--uiLeft === 0 && root.style.getPropertyValue("--mr-ui-panel")){
+        var WOOD = {
+          "--mr-wood-line":   "transparent",      /* the dark ring around each pill */
+          "--mr-wood-ink":    "#fff3dc",          /* cream, for the banner's brown grain */
+          "--mr-wood-shadow": "0 2px 0 rgba(58,34,12,.8)",
+          "--mr-wood-ink2":   "#4a3520",          /* dark, for the badge's cream face */
+          "--mr-wood-op":     "1",
+          "--mr-badge-sz":    "3.3em",            /* the badge art is round: square its box */
+          /* [r116] Yasir's new board (ui_badge.webp, 380x262): a rectangle, so the box takes its shape */
+          "--mr-badge-w":     "4.9em",
+          "--mr-badge-h":     "3.38em",
+          "--mr-badge-em":    "1.32em",           /* and the glyph has to sit inside it */
+          "--mr-badge-sp":    "0.92em",
+          "--mr-badge-pad":   "0",
+          "--mr-badge-align": "center",
+          "--mr-bar-bg":      "rgba(74,53,32,.45)",
+          "--mr-bar-line":    "rgba(94,62,30,.85)",
+          /* Slices are in the SHIPPED image's own pixels. Measured 225/163/88/155 on the
+             949x893 source, scaled by the 760px encode: 180/131/70/124. Using the numbers from
+             the source would have cut the frame in the wrong places. */
+          /* Measured on the SHIPPED panel.webp (760x715) by taking the widest unbroken run of
+             cream on any row, then the longest unbroken run down that row's centre. The first
+             attempt used one scan line through the middle, which ran off the bottom of the
+             board and onto the tan stone base below it - that passes for cream, so the face
+             came out 24% too tall and every line of text landed on the posts.
+             Face: 16.3%/17.1% in from the sides, 25.2% down, 34.0% up. Padding resolves
+             against WIDTH, so the vertical pair is divided by the board's aspect. */
+          "--mr-card-bg":     'url("' + mri(DIR + 'panel3.webp') + '") center/100% 100% no-repeat',
+          "--mr-card-ar":     "840 / 565",
+          /* measured off the shipped panel3.webp: the cream face sits 18.2% down, 14.5%
+             up and 14.2%/10.2% in, as fractions of the card's WIDTH (which is what CSS
+             padding resolves against). A little extra all round keeps the text off the frame. */
+          "--mr-card-pad":    "20% 12% 16.5% 16%",
+          "--mr-card-bw":     "0",
+          "--mr-card-bc":     "transparent",
+          "--mr-card-r":      "0",
+          "--mr-card-ink":    "#4a3520",
+          "--mr-card-head":   "#a85d12",
+          "--mr-card-sh":     "0 1px 0 rgba(255,255,255,.55)",
+          "--mr-tally-bg":    "rgba(74,53,32,.10)",
+          "--mr-tally-line":  "rgba(74,53,32,.18)"
+        };
+        Object.keys(WOOD).forEach(function(k){ root.style.setProperty(k, WOOD[k]); });
+      }
+    };
+    window.MR_artTotal++;
+    im.addEventListener("load", settle, { once:true }); im.addEventListener("error", settle, { once:true });
+    im.src = mri(DIR + UI[prop]);
+  });
+})();
+
+const IMG = {};
+["character.png","character.svg"].forEach(f=>{
+  const i = new Image();
+  i.onload = ()=>{ if(!IMG.char || f.endsWith(".png")) IMG.char = i; };
+  i.src = mri("assets/img/" + f);
+});
+(function(){ const i=new Image(); i.onload=()=>IMG.coin=i; i.src=mri("assets/img/coin.svg"); })();
+
+/* ---- शेर का बच्चा (tiger cub, seen from behind) ---- */
+function drawTiger(){
+  /* [r38] the painted hero, with a real run cycle, when tiger_run.png is present */
+  if(window.MR_drawTigerArt && MR_drawTigerArt()) return;
+  if(IMG.char) return drawTigerImage();
+  const x = laneX(G.laneF, 1), y = groundY();
+  const run = G.mode==="play" ? G.t*13 : G.t*5;
+  const bob = Math.abs(Math.sin(run))*6*S;
+  const lean = (G.targetLane - G.laneF)*0.55;
+  const u = S*1.05;
+
+  // shadow
+  ctx.save();
+  ctx.fillStyle="rgba(0,0,0,.34)";
+  ctx.beginPath(); ctx.ellipse(x, y+4*u, 46*u, 13*u, 0,0,7); ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(x, y-bob);
+  ctx.rotate(-lean*0.16);
+
+  // tail
+  const tw = Math.sin(run*0.7)*0.5;
+  ctx.strokeStyle="#f0913c"; ctx.lineWidth=9*u; ctx.lineCap="round";
+  ctx.beginPath(); ctx.moveTo(0,-52*u);
+  ctx.quadraticCurveTo(26*u*tw, -92*u, 40*u*tw, -118*u);
+  ctx.stroke();
+  ctx.strokeStyle="#2a1a12"; ctx.lineWidth=9*u;
+  ctx.beginPath(); ctx.moveTo(34*u*tw,-108*u); ctx.lineTo(40*u*tw,-118*u); ctx.stroke();
+
+  // back legs
+  for(const side of [-1,1]){
+    const ph = Math.sin(run + (side<0?0:Math.PI));
+    ctx.fillStyle="#e07f2c";
+    ctx.save();
+    ctx.translate(side*17*u, -20*u);
+    ctx.rotate(ph*0.32);
+    roundRect(-9*u, 0, 18*u, 26*u, 8*u); ctx.fill();
+    ctx.fillStyle="#3b2418";
+    roundRect(-9*u, 18*u, 18*u, 9*u, 5*u); ctx.fill();
+    ctx.restore();
+  }
+
+  // cape
+  const flap = Math.sin(run*0.9)*0.24;
+  ctx.fillStyle="rgba(200,44,62,.92)";
+  ctx.beginPath();
+  ctx.moveTo(-26*u,-74*u);
+  ctx.quadraticCurveTo(-46*u+flap*22*u, -42*u, -20*u+flap*18*u, -12*u);
+  ctx.quadraticCurveTo(0,-24*u, 20*u+flap*18*u, -12*u);
+  ctx.quadraticCurveTo(46*u+flap*22*u, -42*u, 26*u, -74*u);
+  ctx.closePath(); ctx.fill();
+
+  // body
+  const bg = ctx.createLinearGradient(0,-78*u,0,-16*u);
+  bg.addColorStop(0,"#ffa94d"); bg.addColorStop(1,"#e07f2c");
+  ctx.fillStyle=bg;
+  ctx.beginPath(); ctx.ellipse(0,-46*u, 30*u, 34*u, 0,0,7); ctx.fill();
+  // stripes
+  ctx.strokeStyle="#33200f"; ctx.lineWidth=5*u; ctx.lineCap="round";
+  for(let i=0;i<3;i++){
+    const yy = -64*u + i*17*u;
+    ctx.beginPath();
+    ctx.moveTo(-24*u, yy); ctx.quadraticCurveTo(-12*u, yy+6*u, -6*u, yy+2*u); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(24*u, yy); ctx.quadraticCurveTo(12*u, yy+6*u, 6*u, yy+2*u); ctx.stroke();
+  }
+  // armour
+  ctx.fillStyle="#f3c33f";
+  roundRect(-24*u,-62*u,48*u,17*u,7*u); ctx.fill();
+  ctx.fillStyle="#c9971d"; roundRect(-24*u,-49*u,48*u,5*u,3*u); ctx.fill();
+  ctx.fillStyle="#43b8ff";
+  ctx.beginPath(); ctx.arc(0,-54*u, 7*u, 0,7); ctx.fill();
+  ctx.fillStyle="rgba(255,255,255,.75)";
+  ctx.beginPath(); ctx.arc(-2*u,-56*u, 2.4*u, 0,7); ctx.fill();
+  // shoulder pads
+  for(const side of [-1,1]){
+    ctx.fillStyle="#f3c33f";
+    ctx.beginPath(); ctx.ellipse(side*29*u,-64*u, 12*u, 10*u, side*0.3,0,7); ctx.fill();
+    ctx.fillStyle="#c9971d";
+    ctx.beginPath(); ctx.ellipse(side*29*u,-61*u, 12*u, 4*u, side*0.3,0,7); ctx.fill();
+  }
+
+  // head
+  const hy2 = -96*u + Math.sin(run*2)*2*u;
+  ctx.fillStyle="#ffb055";
+  ctx.beginPath(); ctx.ellipse(0,hy2, 25*u, 23*u, 0,0,7); ctx.fill();
+  // ears
+  for(const side of [-1,1]){
+    ctx.fillStyle="#e78a34";
+    ctx.beginPath(); ctx.ellipse(side*18*u, hy2-17*u, 9*u, 10*u, side*0.35,0,7); ctx.fill();
+    ctx.fillStyle="#f8b8c0";
+    ctx.beginPath(); ctx.ellipse(side*18*u, hy2-16*u, 4.6*u, 5.4*u, side*0.35,0,7); ctx.fill();
+  }
+  // head stripes
+  ctx.strokeStyle="#33200f"; ctx.lineWidth=4.2*u;
+  ctx.beginPath(); ctx.moveTo(-6*u,hy2-20*u); ctx.lineTo(-8*u,hy2-11*u); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(6*u,hy2-20*u);  ctx.lineTo(8*u,hy2-11*u);  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-20*u,hy2-2*u); ctx.lineTo(-12*u,hy2-1*u); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(20*u,hy2-2*u);  ctx.lineTo(12*u,hy2-1*u);  ctx.stroke();
+  // cheek fluff peeking
+  ctx.fillStyle="#fff1dc";
+  ctx.beginPath(); ctx.ellipse(-21*u,hy2+9*u, 8*u,6*u, .5,0,7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(21*u,hy2+9*u, 8*u,6*u, -.5,0,7); ctx.fill();
+  // helmet band
+  ctx.fillStyle="#f3c33f";
+  ctx.beginPath(); ctx.ellipse(0,hy2-9*u, 25*u, 9*u, 0, Math.PI*1.04, Math.PI*1.96); ctx.fill();
+
+  ctx.restore();
+}
+
+function drawTigerImage(){
+  const x = laneX(G.laneF, 1), y = groundY();
+  const run = G.mode==="play" ? G.t*13 : G.t*5;
+  const bob = Math.abs(Math.sin(run))*6*S;
+  const lean = (G.targetLane - G.laneF)*0.55;
+  const h = 150*S, w = h * (IMG.char.width/IMG.char.height || 0.8);
+  ctx.save();
+  ctx.fillStyle="rgba(0,0,0,.34)";
+  ctx.beginPath(); ctx.ellipse(x, y+4*S, w*0.42, 13*S, 0,0,7); ctx.fill();
+  ctx.translate(x, y-bob); ctx.rotate(-lean*0.16);
+  ctx.drawImage(IMG.char, -w/2, -h, w, h);
+  ctx.restore();
+}
+
+/* ---- the painted versions of each draw, used only when their file is present ----
+   Each one WRAPS the existing function rather than replacing it, so the code-drawn game is
+   still there underneath and a missing file costs nothing. */
+(function(){
+  "use strict";
+  var ART = window.MR_ART;
+
+  /* --- sky, ridge, treeline: three layers, each shifted by its own share of the pan ---
+     The depths are small and they differ by about a factor of two each, which is what reads
+     as distance. Every layer is drawn WIDER than the canvas by the most it can ever move, so
+     panning can never expose the edge of a backdrop - the alternative, letting it move within
+     its own width, means the sky ends somewhere on screen. */
+  /* [r58] COVER, NOT STRETCH. The sky band is about 265px tall on a 1382px screen - roughly
+     5:1 - and the painting is 2.4:1, so drawing it to fit squashed it to less than half its
+     height: the mountains came out squat and the clouds smeared. This takes the slice of the
+     picture that has the destination's shape and crops the rest, anchored so the part that
+     matters stays (the horizon for the sky, the base for the treeline).
+     `squash` allows a little distortion before cropping - at zero the treeline band would keep
+     a sliver of its own height and lose the crowns entirely. */
+  function layer(img, top, h, depth, anchor, squash){
+    var pad = LANE_W() * depth * 0.6;
+    var dx  = -camLane() * LANE_W() * depth;
+    var dw = W + pad*2, dh = h;
+    var ia = img.width/img.height, da = dw/dh;
+    var want = Math.min(da, ia*(squash||1));        /* how wide a slice to take */
+    var sw = img.width, sh = img.height, sx = 0, sy = 0;
+    if(ia > want){ sw = img.height*want; sx = (img.width-sw)*0.5; }
+    else          { sh = img.width/want; sy = (img.height-sh)*(anchor===undefined?0.5:anchor); }
+    ctx.drawImage(img, sx, sy, sw, sh, dx - pad, top, dw, dh);
+  }
+
+  /* [r58] THE CUT-OUT LAYERS CANNOT BE CROPPED. The ridge and the treeline are keyed shapes
+     trimmed tight to their own ink, so taking a slice of them to fit a shallow band cuts
+     straight through the silhouette and leaves a ruled line across the sky - which is exactly
+     what appeared where the mountains met the treeline.
+     Scaled to the band's height they come out narrower than the screen, so they are repeated
+     across it, every other copy mirrored. A mirrored repeat of a mountain range or a canopy
+     reads as more of the same range; a butted repeat reads as a seam. The mirrored pair is
+     composed once per size and re-used, not flipped per frame. */
+  var tiles = {};
+  function mirrorPair(img, h){
+    var key = img.src + "|" + Math.round(h);
+    if(tiles[key]) return tiles[key];
+    var tw = Math.max(2, Math.round(h * (img.width/img.height)));
+    var c = document.createElement("canvas");
+    c.width = tw*2; c.height = Math.round(h);
+    var g = c.getContext("2d");
+    g.drawImage(img, 0, 0, tw, c.height);
+    g.save(); g.translate(tw*2, 0); g.scale(-1, 1);
+    g.drawImage(img, 0, 0, tw, c.height); g.restore();
+    tiles = {}; tiles[key] = c;             /* one size is live at a time; drop the rest */
+    return c;
+  }
+  function band(img, top, h, depth){
+    var pad = LANE_W() * depth * 0.6;
+    var dx  = -camLane() * LANE_W() * depth;
+    var pair = mirrorPair(img, h), pw = pair.width;
+    var x0 = dx - pad, x1 = W + pad;
+    var start = x0 - ((x0 % pw) + pw) % pw;
+    for(var x = start; x < x1; x += pw) ctx.drawImage(pair, x, top, pw, h);
+  }
+  /* [r68] YASIR'S VALLEY. A muted, looping, inline video, drawn into the canvas every frame.
+     Only the waterfalls move in it; the loop is 9 s and seamless (prepare_bridge.py cross-fades
+     its last second into its first). It is drawn through the canvas rather than laid behind it
+     as a DOM element so the screen shake, the vignette and everything else keep working the way
+     they always have, with no second layer to keep in step.
+     THE ANCHOR: the sun's centre is at 0.525 of the frame's width and its lower edge - the
+     horizon - at 0.40 of its height, measured off the first frame. That point is pinned to the
+     game's vanishing point, so the bridge runs into the sun. */
+  /* [r116] Yasir's new valley video: the sun's centre at 0.504 of the width, its lower edge at 0.389 of
+     the height (measured on its first frame) */
+  var VALLEY_CX = 0.504, VALLEY_HY = 0.389;
+  var vid = document.createElement("video");
+  vid.muted = true; vid.defaultMuted = true; vid.loop = true; vid.playsInline = true;
+  vid.preload = "auto";
+  vid.setAttribute("muted", ""); vid.setAttribute("playsinline", ""); vid.setAttribute("webkit-playsinline", "");
+  /* [r126] WebM where the browser plays it, the MP4 where it does not (older iPhones) */
+  vid.src = mri("assets/MatraRunner/" + (vid.canPlayType('video/webm; codecs="vp9"') ? "bg_valley.webm" : "bg_valley.mp4"));   /* this closure has no DIR; same folder as the art */
+  var vidAsked = 0;
+  function valleyFrame(){
+    /* ask to play at most once a second while paused: play() returns a promise that rejects if
+       the browser wants a gesture, and asking every frame would only flood the console */
+    if(vid.paused && G.mode !== "over"){
+      var now = Date.now();
+      if(now - vidAsked > 1000){ vidAsked = now; var pr = vid.play(); if(pr && pr.catch) pr.catch(function(){}); }
+    }
+    if(vid.readyState >= 2 && vid.videoWidth) return vid;
+    return ART.has("valley") ? ART.img("valley") : null;
+  }
+  /* stop it with the music when the lesson leaves this screen - a looping video in memory keeps
+     decoding, and on a tablet that is battery the child is not getting anything for */
+  var _audioStop = window.MR_audioStop;
+  window.MR_audioStop = function(){ try{ vid.pause(); }catch(e){} if(_audioStop) _audioStop(); };
+
+  window.MR_drawSky = function(){
+    var hy = horizonY();
+    var vf = bridgeOn() ? valleyFrame() : null;
+    if(vf){
+      var vw = vf.videoWidth || vf.width, vh = vf.videoHeight || vf.height;
+      /* cover the screen with the sun pinned to (W/2, horizon) */
+      var sc = Math.max(W / (2 * Math.min(VALLEY_CX, 1 - VALLEY_CX) * vw),
+                        hy / (VALLEY_HY * vh), (H - hy) / ((1 - VALLEY_HY) * vh));
+      ctx.drawImage(vf, W/2 - VALLEY_CX*vw*sc, hy - VALLEY_HY*vh*sc, vw*sc, vh*sc);
+      return true;
+    }
+    if(!ART.has("sky")) return false;
+    layer(ART.img("sky"), 0, hy + 2, 0.045, 0.62, 2.4);
+    /* the ridge and the treeline keep their own proportions and repeat across */
+    if(ART.has("mountains")) band(ART.img("mountains"), hy - hy*0.52, hy*0.52, 0.10);
+    if(ART.has("hills"))     band(ART.img("hills"),     hy - hy*0.30, hy*0.34, 0.20);
+    return true;
+  };
+
+  /* --- ground: drawn in depth bands, so the floor has perspective ---------------------
+     For each band of screen rows we invert the projection to get the world depth z that band
+     shows, then set a transform that places texture row V exactly at that screen row and
+     scales texels by the depth foreshortening p. A fixed point on the ground therefore keeps
+     the same texture coordinate as it approaches, which is what makes it rush past the
+     runner's feet and crawl at the horizon.
+
+     No clip per band, and no offscreen strip: each band's fillRect is bounded to that band in
+     TEXTURE space, and the pattern is transformed by the CTM, so one fill paints one band
+     correctly tiled. That keeps the whole floor at about 160 fills a frame. */
+  var grassPat = null, pathPat = null, grassFor = null, pathFor = null;
+  var BAND = 4;                       // screen rows per band; below ~5 the stepping is invisible
+  var gcv = null, gcx = null;         // the floor's own canvas, at CSS resolution
+
+  /* screen pixels of depth, at the runner's feet, per unit of z. Everything about the floor's
+     scale follows from this one number, so the texture cannot drift out of step with the
+     projection the gates and the railing are drawn with. */
+  function isoZ(){ return (groundY() - horizonY()) * K; }
+  function depthAt(y){                       // invert proj(): screen row -> world depth
+    var p = (y - horizonY()) / (groundY() - horizonY());
+    return { p: p, z: (1/p - 1) / K };
+  }
+
+  /* [r69] k = the offscreen's pixel ratio (1 = CSS pixels, as the old road always used), and
+     bandH = CSS rows per band. The bridge deck passes DPR and 2: at CSS resolution on a 2x screen
+     the deck was painted at half the display's resolution and stretched, and 4-row bands drew each
+     diagonal slab joint as a staircase of 8-device-pixel steps. */
+  function bands(g2, pat, base, texH, halfLanes, kpx, bandH){
+    kpx = kpx || 1; var B = bandH || BAND;   /* kpx, NOT k: k is this function's own tile-wrap offset below */
+    var hy = horizonY(), gy = groundY();
+    var vz = isoZ() / base;                  // texture rows per unit z: isotropic at the feet
+    for(var y = hy; y < H; y += B){
+      var lo = depthAt(y + B), hi = depthAt(y);   // lo = nearer/lower, hi = farther/higher
+      if(hi.p < 0.012 || lo.p <= 0) continue;        // the last slice into the horizon
+      var vLo = (lo.z + G.ground) * vz, vHi = (hi.z + G.ground) * vz;
+      var span = vHi - vLo;                          // texture rows this band has to show
+      if(!(span > 0) || !isFinite(span)) continue;
+      var sx = ((lo.p + hi.p) * 0.5) * base;         // across the track: texels scale with p
+      if(sx < 0.04) continue;
+      var sy = B / span;                          // along it: with p squared, via the span
+      /* wrapped to whole tiles - the pattern is periodic, so this is invisible, and it keeps
+         the numbers small enough that a long session stays exact */
+      var k = Math.floor(vLo / texH) * texH;
+      vLo -= k;
+      /* v grows away from the camera while screen y grows toward it, hence the negative sy.
+         The offscreen holds only the ground, so hy comes off the vertical placement. */
+      g2.setTransform(sx*kpx, 0, 0, -sy*kpx, worldX(0, lo.p)*kpx, ((y + B - hy) + vLo*sy)*kpx);
+      g2.fillStyle = pat;
+      var half = halfLanes ? LANE_W() * lo.p * halfLanes : W;
+      g2.fillRect(-half/sx - 2, vLo, (half*2)/sx + 4, span + 1/sy);
+    }
+    g2.setTransform(1, 0, 0, 1, 0, 0);
+  }
+
+  var deckPat = null, deckFor = null;
+  /* [r68] THE DECK. The same projection the road used, with the slab tile, and NOTHING outside
+     it: off the bridge the valley shows, so the offscreen is cleared, not filled. The deck's edges
+     run straight to the vanishing point all the way to the foot of the screen - the parapet does,
+     and a deck that went vertical under it (the old road stopped widening at the runner's line)
+     would leave a sliver of valley showing beneath the wall. */
+  function drawDeck(){
+    var hy = horizonY(), gy = groundY(), gh = Math.max(1, Math.round(H - hy + 2));
+    var gw = Math.max(1, Math.round(W));
+    if(!gcv){ gcv = document.createElement("canvas"); gcx = gcv.getContext("2d"); }
+    /* [r69] at the display's own resolution: see bands() */
+    var kd = Math.max(1, Math.min(3, DPR || 1));
+    var dw = Math.round(gw * kd), dh = Math.round(gh * kd);
+    if(gcv.width !== dw || gcv.height !== dh){
+      gcv.width = dw; gcv.height = dh;
+      grassPat = pathPat = grassFor = pathFor = null; deckPat = deckFor = null;
+    }
+    var di = ART.img("deck");
+    if(deckFor !== di){ deckPat = gcx.createPattern(di, "repeat"); deckFor = di; }
+    gcx.setTransform(1, 0, 0, 1, 0, 0);
+    gcx.clearRect(0, 0, dw, dh);
+    gcx.setTransform(kd, 0, 0, kd, 0, 0);        /* the clip path below is in CSS pixels */
+    /* [r69] 3% wider than the wall's foot line: the deck's clip and the wall's clip are both
+       antialiased, and where two soft edges share a line the lake shows through the seam as a
+       blue hairline. Tucked under the wall, the deck's edge is hidden and the wall's blends
+       onto stone. */
+    var RH = roadHalf() * 1.03, pFar = proj(26), pFoot = (H - hy) / (gy - hy);
+    var wFar = LANE_W()*pFar.p*RH, wFoot = LANE_W()*pFoot*RH;
+    var cFar = worldX(0, pFar.p), cFoot = worldX(0, pFoot);
+    gcx.save();
+    gcx.beginPath();
+    gcx.moveTo(cFar - wFar, pFar.y - hy); gcx.lineTo(cFar + wFar, pFar.y - hy);
+    gcx.lineTo(cFoot + wFoot, gh);        gcx.lineTo(cFoot - wFoot, gh);
+    gcx.closePath(); gcx.clip();
+    /* 0.6: about five slabs across the deck at the runner's line, as in his mockup */
+    /* 1-row bands: a band's single across-track scale is off by (offset x rows) / (p x ground
+       depth), about 1.2 px at the deck's edge per CSS row - at 2 rows the slab joints zig-zagged */
+    bands(gcx, deckPat, 0.6, di.height, RH + 0.1, kd, 1);
+    gcx.restore();
+    ctx.drawImage(gcv, 0, hy, W, gh);
+  }
+
+  /* [r68] THE PARAPET AND THE POSTS.
+     The wall's inner face is an upright plane running along the deck's edge. Canvas cannot map a
+     picture onto a perspective plane, so it is drawn in thin upright slices - each slice is one
+     depth, so its texture column is that depth's, and it is scaled to the wall's height THERE.
+     The whole face is clipped to its exact outline first (a straight line to the vanishing point
+     along the foot, another along the top), so the slices' square tops never show as steps.
+     The texture scrolls with the deck: its column comes from the same travelled distance. */
+  var WALL_H = 0.44, POST_H = 0.74, POST_EVERY = 4, SLICE = 5;   /* chunky, as in his mockup;
+     [r69] 5px slices, each sheared to the face's mid-height slope: the leftover step at the top
+     and foot of the wall is SLICE x the slope difference / 2, under a pixel at 5 */
+  function edgeX(side, p){ return worldX(side * roadHalf(), p); }
+  /* [r69] pre-shrunk copies of the wall texture: canvas has no mipmaps, so a slice squeezed to a
+     few pixels samples the full-size art sparsely and shimmers as it scrolls */
+  var wallMips = null, wallMipsFor = null;
+  function wallMip(scale){
+    var w = ART.img("wall");
+    if(wallMipsFor !== w){
+      wallMips = [w]; wallMipsFor = w;
+      var src = w;
+      for(var i = 0; i < 2; i++){
+        var c = document.createElement("canvas");
+        c.width = Math.max(2, Math.round(src.width / 2)); c.height = Math.max(2, Math.round(src.height / 2));
+        var g = c.getContext("2d"); g.imageSmoothingQuality = "high";
+        g.drawImage(src, 0, 0, c.width, c.height);
+        wallMips.push(c); src = c;
+      }
+    }
+    /* scale = drawn height / full texture height */
+    var lvl = scale < 0.25 ? 2 : scale < 0.5 ? 1 : 0;
+    return wallMips[lvl];
+  }
+  var SHOW_POSTS = false;          /* [r69] Yasir: "remove the pillars" */
+  function drawParapets(){
+    var wall = ART.img("wall"), post = ART.img("post");
+    var hy = horizonY(), gy = groundY(), LW = LANE_W();
+    var wH = WALL_H * LW;
+    var texPerZ = ((gy - hy) * K) * (wall.height / wH);        // full-size texture px per unit depth
+    var p0 = 0.012;
+    var pTop = (H - hy) / Math.max(1, (gy - hy) - wH);
+    var pMax = Math.min(3.0, pTop);
+    var footY = function(p){ return hy + (gy - hy) * p; };
+    var topY  = function(p){ return footY(p) - wH * p; };
+    for(var si = 0; si < 2; si++){
+      var side = si ? 1 : -1;
+      var x0 = edgeX(side, p0), x1 = edgeX(side, pMax);
+      ctx.save();
+      /* compose with whatever is current - the DPR scale AND the screen shake - rather than
+         replacing it, or the walls would stand still while the rest of the frame shakes */
+      var base = ctx.getTransform();
+      ctx.beginPath();
+      ctx.moveTo(x0, footY(p0)); ctx.lineTo(x1, footY(pMax));
+      ctx.lineTo(x1, topY(pMax)); ctx.lineTo(x0, topY(p0));
+      ctx.closePath(); ctx.clip();
+      var span = Math.abs(roadHalf() * LW - side * camLane() * LW);
+      var dp = SLICE / Math.max(1, span);
+      for(var pa = p0; pa < pMax; pa += dp){
+        var pb = Math.min(pMax, pa + dp);
+        var xa = edgeX(side, pa), xb = edgeX(side, pb);
+        if(Math.max(xa, xb) < -2 || Math.min(xa, xb) > W + 2) continue;
+        var za = (1/pa - 1) / K, zb = (1/pb - 1) / K;
+        var hA = wH * pa, hB = wH * pb, hm = (hA + hB) * 0.5;
+        var tex = wallMip(hm / wall.height), k = tex.height / wall.height;
+        var tw = tex.width;
+        var u = ((zb + G.ground) * texPerZ * k) % tw; if(u < 0) u += tw;
+        var du = (za - zb) * texPerZ * k;
+        if(!(du > 0.01)) continue;
+        /* a slice may straddle the texture's wrap point: draw it in two pieces */
+        var pieces = u + du <= tw ? [[u, du, 0]] : [[u, tw - u, 0], [0, du - (tw - u), (tw - u) / du]];
+        for(var q = 0; q < pieces.length; q++){
+          var pu = pieces[q][0], pdu = pieces[q][1], f0 = pieces[q][2], f1 = f0 + pdu / du;
+          /* the slice runs from depth pb (texture column u, screen xb) towards pa (u+du, xa);
+             this piece covers the fraction f0..f1 of that run */
+          var sx0 = xb + (xa - xb) * f0, sx1 = xb + (xa - xb) * f1;
+          /* the face's MID-HEIGHT line, not its top: top and foot run to the vanishing point at
+             different slopes, and an affine slice can follow only one. Following the top left the
+             lowest courses stepping by the whole difference (3.6 px a slice); following the middle
+             splits it, half above and half below, and at 5 px slices that is under a pixel. */
+          var mB = (topY(pb) + footY(pb)) * 0.5, mA = (topY(pa) + footY(pa)) * 0.5;
+          var my0 = mB + (mA - mB) * f0, my1 = mB + (mA - mB) * f1;
+          var hh  = hB + (hA - hB) * ((f0 + f1) * 0.5);
+          var ax = (sx1 - sx0) / pdu, ay = (my1 - my0) / pdu, dy = hh / tex.height;
+          ctx.setTransform(base);
+          ctx.transform(ax, ay, 0, dy, sx0 - ax * pu, my0 - ay * pu - hh * 0.5);
+          /* half a texel of overlap each side hides the hairline seam between neighbours */
+          ctx.drawImage(tex, pu, 0, pdu, tex.height, pu - 0.5, -0.5, pdu + 1, tex.height + 1);
+        }
+      }
+      ctx.setTransform(base);
+      ctx.restore();
+    }
+    if(!SHOW_POSTS) return;
+    /* the posts, far to near, both sides - drawn over the walls they stand in */
+    var aspect = post.width / post.height;
+    for(var i = 0; i < G.rails.length; i++){
+      var r = G.rails[i];
+      if(r.k % POST_EVERY) continue;
+      if(r.z < -0.045) continue;
+      var pr = proj(r.z), p = pr.p;
+      if(p < 0.05) continue;
+      var ph = POST_H * LW * p, pw = ph * aspect;
+      for(var sj = 0; sj < 2; sj++){
+        var sd = sj ? 1 : -1;
+        var cx = edgeX(sd, p) + sd * pw * 0.12;
+        if(cx + pw < 0 || cx - pw > W) continue;
+        if(sd > 0){
+          ctx.save(); ctx.translate(cx, 0); ctx.scale(-1, 1);
+          ctx.drawImage(post, -pw/2, pr.y - ph + ph*0.02, pw, ph);
+          ctx.restore();
+        } else {
+          ctx.drawImage(post, cx - pw/2, pr.y - ph + ph*0.02, pw, ph);
+        }
+      }
+    }
+  }
+  window.MR_drawBridge = function(){
+    if(!bridgeOn()) return false;
+    drawDeck();
+    drawParapets();
+    return true;
+  };
+
+  window.MR_drawGroundArt = function(){
+    if(!ART.has("grass")) return false;
+    var hy = horizonY(), gh = Math.max(1, Math.round(H - hy + 2));
+    var gw = Math.max(1, Math.round(W));
+    if(!gcv){ gcv = document.createElement("canvas"); gcx = gcv.getContext("2d"); }
+    if(gcv.width !== gw || gcv.height !== gh){
+      gcv.width = gw; gcv.height = gh;
+      grassPat = pathPat = grassFor = pathFor = null;   // patterns belong to a context
+    }
+
+    var g = ART.img("grass");
+    if(grassFor !== g){ grassPat = gcx.createPattern(g, "repeat"); grassFor = g; }
+    /* A BACKSTOP under the bands. However far up the bands are taken, the last rows into the
+       horizon foreshorten past the point where a band can be drawn at all, and whatever is
+       left shows the canvas through - a dark strip along the skyline, exactly where the eye is
+       looking. One flat fill of the verge's own colour costs nothing and closes it. */
+    gcx.setTransform(1, 0, 0, 1, 0, 0);
+    gcx.fillStyle = "#3f6b2c";
+    gcx.fillRect(0, 0, gw, gh);
+    /* 0.60: at a larger scale one tile covered half the screen near the runner, so by
+       mid-distance foreshortening had squeezed its detail away and the verge read as a lawn. */
+    bands(gcx, grassPat, 0.60, g.height, null);
+
+    if(ART.has("path")){
+      var pi = ART.img("path");
+      if(pathFor !== pi){ pathPat = gcx.createPattern(pi, "repeat"); pathFor = pi; }
+      var pFar = proj(26), pNear = proj(0);
+      var wFar = LANE_W()*pFar.p*1.08, wNear = LANE_W()*pNear.p*1.08;
+      var cFar = worldX(0, pFar.p), cNear = worldX(0, pNear.p);
+      gcx.save();
+      /* ONE clip for the road, not one per band: the bands would otherwise stair-step its
+         edges by up to BAND pixels, and the eye reads a ragged kerb immediately. */
+      gcx.beginPath();
+      gcx.moveTo(cFar - wFar, pFar.y - hy); gcx.lineTo(cFar + wFar, pFar.y - hy);
+      gcx.lineTo(cNear + wNear, gh);        gcx.lineTo(cNear - wNear, gh);
+      gcx.closePath(); gcx.clip();
+      bands(gcx, pathPat, 1.55, pi.height, 1.16);
+      gcx.restore();
+    }
+
+    ctx.drawImage(gcv, 0, hy, W, gh);
+    return true;
+  };
+
+  /* --- the hero: a real run cycle when the strip is there --- */
+  window.MR_drawTigerArt = function(){
+    var name = null;
+    if(G.mode === "over"){
+      /* [r58] THE FALL, PLAYED ONCE AND THEN HELD CRYING. The sheet runs standing -> tumbling
+         -> sitting -> sobbing; the first six frames are the collision and must not repeat, so
+         it plays straight through and then loops only the tail, where she is already sitting
+         and her shoulders are shaking. Looping the whole thing would have her fall over again
+         every second, which is comic in the wrong direction. */
+      if(ART.has("fall")){
+        var ft = (G.t - (G.deadT||G.t)) * 13;
+        var last = ART.frames("fall") - 1;
+        var f2 = ft < last ? Math.floor(ft) : 9 + (Math.floor(ft - last) % (last - 9 + 1));
+        var im2 = ART.img("fall"), r2 = ART.rect("fall", f2);
+        var x2 = laneX(G.laneF, 1), y2 = groundY();
+        var h2 = 170*S, w2 = h2*(r2[2]/r2[3]);
+        ctx.save();
+        ctx.fillStyle = "rgba(0,0,0,.30)";
+        ctx.beginPath(); ctx.ellipse(x2, y2+4*S, w2*0.36, 12*S, 0, 0, 7); ctx.fill();
+        ctx.drawImage(im2, r2[0], r2[1], r2[2], r2[3], x2-w2/2, y2-h2, w2, h2);
+        ctx.restore();
+        return true;
+      }
+      name = ART.has("hit")   ? "hit"   : (ART.has("stumble") ? "stumble" : null);
+    }
+    else if(false) name = null;
+    else if(G.mode === "win")  name = ART.has("happy") ? "happy" : (ART.has("cheer")   ? "cheer"   : null);
+    /* [r112] her moves: the bump after running into something, the slide, the jump */
+    var lift = 0, hScale = 1;
+    if(!name && G.mode === "play"){
+      if(G.hitT > 0 && (ART.has("bump") || ART.has("stumble"))) name = ART.has("bump") ? "bump" : "stumble";
+      else if(G.slideT > 0 && ART.has("slide")){ name = "slide"; hScale = 0.56; }
+      else if(G.jumpT > 0 && ART.has("jump")){
+        name = "jump"; lift = Math.sin(Math.PI * Math.min(1, G.jumpT / JUMP_DUR)) * 165 * S;
+      }
+    }
+    if(!name){
+      var d = G.targetLane - G.laneF;
+      if(d < -0.18 && ART.has("leanL")) name = "leanL";
+      else if(d > 0.18 && ART.has("leanR")) name = "leanR";
+    }
+    var frame = 0;
+    if(!name){
+      if(!ART.has("run")) return false;
+      name = "run";
+      /* Timed by the CYCLE, not by a frame rate. 13 fps suited the four stills it replaced;
+         the delivered sheet has sixteen, and at 13 fps one stride would take a second and a
+         quarter - a stroll. A stride is about 0.62s however many frames describe it. */
+      /* 1.05s, not 0.62. The shorter stride was set against four stills; sixteen frames of
+         a real cycle at that rate is a sprint, and it reads as wrong against a world moving
+         at walking pace. */
+      /* [r114] from the accumulated phase (update) - never jumps when the speed changes */
+      frame = Math.floor((G.runPh || 0) * ART.frames("run")) % ART.frames("run");
+    }
+    var im = ART.img(name), r = ART.rect(name, frame);
+    if(!im || !r) return false;
+    var x = laneX(G.laneF, 1), y = groundY();
+    /* No synthetic bob when the art is a real cycle: the animation already rises and falls,
+       and adding a sine on top of it gives two bounces at different rates. */
+    var bob = (name === "run" && ART.frames("run") > 4) ? 0
+            : Math.abs(Math.sin(G.t * 13)) * 5 * S;
+    if(G.mode === "win") bob = Math.abs(Math.sin(G.t * 4.2)) * 30 * S;   /* [r115] she hops as she cheers */
+    if(G.mode === "win") hScale = 1.45;          /* [r118] she is the whole end screen now: bigger */
+    var h = 170 * S * hScale, w = h * (r[2] / r[3]);
+    if(name === "slide") w = Math.min(w, 150 * S);
+    var shw = 1 - 0.45 * (lift / (165 * S));       /* her shadow stays on the ground and shrinks */
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0," + (0.34 * shw).toFixed(3) + ")";
+    ctx.beginPath(); ctx.ellipse(x, y + 4 * S, Math.max(w, 70 * S) * 0.40 * shw, 13 * S * shw, 0, 0, 7); ctx.fill();
+    ctx.drawImage(im, r[0], r[1], r[2], r[3], x - w / 2, y - h - bob - lift, w, h);
+    ctx.restore();
+    return true;
+  };
+
+  /* --- gates: the arch art, with the word still drawn by the game on the blank plate --- */
+  window.MR_gateArt = function(state){
+    var n = state === "right" ? "gateC" : state === "wrong" ? "gateW" : "gateN";
+    return ART.has(n) ? ART.img(n) : (ART.has("gateN") ? ART.img("gateN") : null);
+  };
+  window.MR_plateArt = function(){ return ART.has("plate") ? ART.img("plate") : null; };
+  window.MR_ringArt  = function(){ return ART.has("ring")  ? ART.img("ring")  : null; };
+  window.MR_railArt  = function(){ return ART.has("rail")  ? ART.img("rail")  : null; };
+  window.MR_hedgeArt = function(){ return ART.has("hedge") ? ART.img("hedge") : null; };
+
+
+  /* --- coin: the spin sheet --- */
+  window.MR_coinFrame = function(){
+    if(!ART.has("coinSpin")) return null;
+    var f = Math.floor(G.t * 9) % ART.frames("coinSpin");
+    return { img: ART.img("coinSpin"), r: ART.rect("coinSpin", f) };
+  };
+
+  /* --- roadside decor --- */
+  window.MR_decorArt = function(kind, seed){
+    var pick = function(list){
+      var have = list.filter(function(n){ return ART.has(n); });
+      return have.length ? ART.img(have[Math.abs(seed | 0) % have.length]) : null;
+    };
+    if(kind === "pillar") return pick(["pillar1", "pillar2"]);
+    if(kind === "bush")   return pick(["bush1", "bush2"]);
+    return pick(["tree1", "tree2", "tree3"]);
+  };
+})();
+
+function drawFX(){
+  for(const p of G.parts){
+    ctx.globalAlpha = Math.max(0, Math.min(1,p.life*1.6));
+    ctx.fillStyle=p.col;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7); ctx.fill();
+  }
+  ctx.globalAlpha=1;
+
+  // popups
+  let i=0;
+  for(const p of G.pops){
+    const a = Math.min(1, p.life*2);
+    ctx.globalAlpha=a;
+    const fs = 30*S;
+    ctx.font = "800 "+fs+'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    /* H*0.30, not H*0.47: the gates resolve around H*0.45, so the toast was printing itself
+       across the two words at the exact moment the child looks at them. */
+    const yy = H*0.30 - i*46*S + (1-a)*14*S;
+    ctx.fillStyle="rgba(10,8,24,.72)";
+    const w = Math.max(ctx.measureText(p.text).width, ctx.measureText(p.sub||"").width)+40*S;
+    roundRect(W/2-w/2, yy-fs*0.9, w, p.sub? fs*2.3 : fs*1.5, 14*S); ctx.fill();
+    ctx.fillStyle=p.col; ctx.fillText(p.text, W/2, yy);
+    if(p.sub){
+      ctx.font = "600 "+(19*S)+'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+      ctx.fillStyle="rgba(255,244,222,.85)";
+      ctx.fillText(p.sub, W/2, yy+fs*0.95);
+    }
+    ctx.globalAlpha=1; i++;
+  }
+
+  // level banner
+  if(G.banner){
+    const a = Math.min(1, G.banner.life*1.4);
+    ctx.globalAlpha=a;
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.font="800 "+(52*S)+'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+    /* [r40] A DARK PLATE BEHIND IT. Gold text with a blur shadow was legible over the old
+       night scene; over a sunlit jungle canopy it reads as a dark smudge - the level number
+       was the one thing on screen the child could not make out. */
+    (function(){
+      const tw = Math.max(ctx.measureText(G.banner.text).width,
+                          ctx.measureText(G.banner.sub||"").width*0.9) + 64*S;
+      ctx.fillStyle="rgba(22,14,8,.55)";
+      roundRect(W/2-tw/2, H*0.23-46*S, tw, 112*S, 26*S); ctx.fill();
+    })();
+    ctx.fillStyle="#ffcb45";
+    ctx.shadowColor="rgba(0,0,0,.6)"; ctx.shadowBlur=18;
+    ctx.fillText(G.banner.text, W/2, H*0.23);
+    ctx.font="700 "+(26*S)+'px "Baloo 2","Noto Sans Devanagari",sans-serif';
+    ctx.fillStyle="#fff4de";
+    ctx.fillText(G.banner.sub, W/2, H*0.23+46*S);
+    ctx.shadowBlur=0; ctx.globalAlpha=1;
+  }
+
+  if(G.flash>0){
+    ctx.fillStyle=G.flashCol; ctx.globalAlpha=Math.min(.35,G.flash);
+    ctx.fillRect(0,0,W,H); ctx.globalAlpha=1;
+  }
+}
+
+/* [r77] THE FIRST FRAME WAITS FOR ITS ART. Measured on a cold load: for ~0.8 s the game drew its
+   code-only fallback - the night backdrop, a flat road, the placeholder tiger, a plain HUD - and
+   then the art popped in piece by piece. A curtain in the valley's own colours covers the game
+   until the pieces the first frame is made of have arrived (capped, so a slow file cannot hold it),
+   then lifts. Inline styles: the embed scopes every stylesheet rule under .mr-root. */
+/* [r126] Yasir: "when the running game starts it still shows the previous version for 2-3 seconds
+   and then it gets replaced with the newer version". That "previous version" is this game's code-drawn
+   stand-in art, and it showed because the curtain lifted after 3.5 s whatever had arrived - on a live
+   connection the art (several MB) takes longer than that. The curtain now waits for EVERY picture to
+   answer (loaded or failed), shows a spinner so the wait reads as loading, and gives up only after
+   30 s. The game does not move and nothing is spoken while it is up (see loop() and whenLessonQuiet). */
+var _curtain = null, _curtainUp = true, _curtainT0 = performance.now();
+var CURTAIN_CAP = 30000;           /* only a game opened before the lesson has fetched its art ever comes near this */
+function firstFrameReady(){
+  const A = window.MR_ART;
+  if(!A) return false;
+  const all = window.MR_artTotal > 0 && window.MR_artSettled >= window.MR_artTotal;
+  return all && ["valley", "deck", "wall", "run"].every(k => A.has(k)) && !!window.MR_skinReady;
+}
+function curtain(){
+  if(!_curtainUp) return;
+  if(!_curtain){
+    const host = document.querySelector(".mr-root") || document.body;
+    _curtain = document.createElement("div");
+    _curtain.style.cssText = "position:absolute;inset:0;z-index:50;pointer-events:none;" +
+      "background:linear-gradient(180deg,#7c5bb4 0%,#f08a6a 42%,#f6c27a 62%,#4f86b8 100%);" +
+      "transition:opacity .45s ease;opacity:1";
+    host.appendChild(_curtain);
+    const sp = document.createElement("div");
+    sp.style.cssText = "position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;" +
+      "border-radius:50%;border:7px solid rgba(255,255,255,.35);border-top-color:#fff";
+    _curtain.appendChild(sp);
+    try{ sp.animate([{ transform:"rotate(0deg)" }, { transform:"rotate(360deg)" }],
+                    { duration:900, iterations:Infinity }); }catch(e){}
+  }
+  if(firstFrameReady() || performance.now() - _curtainT0 > CURTAIN_CAP){
+    _curtainUp = false;
+    requestAnimationFrame(() => { _curtain.style.opacity = "0";
+      setTimeout(() => { if(_curtain){ _curtain.remove(); _curtain = null; } }, 600); });
+  }
+}
+function render(){
+  curtain();
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  /* [r51] NOT turning smoothing off here, although the obvious reasoning says to: bilinear
+     filtering looks like the expensive part of a sprite, and leaves at close to their own size
+     have nothing to gain from it. Measured, switching it off took the trees from 11 ms to 74
+     and the rest of the frame from 32 to 73 - the filtered path is the one this rasteriser has
+     optimised, and the "cheap" one falls off it. Left on, deliberately. */
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  if(G.shake>0){
+    ctx.translate((Math.random()-0.5)*16*G.shake*S,(Math.random()-0.5)*12*G.shake*S);
+  }
+  // sky
+  /* [r38] painted sky if the files are there, else the generated backdrop */
+  if(!(window.MR_drawSky && MR_drawSky())){
+    if(backdrop) ctx.drawImage(backdrop, 0,0, W, horizonY()+2);
+  }
+  /* [r68] the bridge replaces the ground, the verge, its decor and its railing in one go */
+  const _bridge = !!(window.MR_drawBridge && MR_drawBridge());
+  if(!_bridge) drawGround();
+  /* [r50] THE TREELINE'S SKIRT. The backdrop's treeline stops exactly at the horizon and the
+     ground begins there, which leaves a band of open verge between the far hedge and the
+     trees - the same flat green, just narrower and higher up. Drawing the treeline again over
+     the top of the ground closes it, and it is what that distance looks like anyway: the road
+     runs out of the jungle rather than out of a lawn. */
+  if(window.MR_ART && MR_ART.has("canopy")){
+    const hy2 = horizonY(), sk = (groundY()-hy2)*0.17;
+    ctx.drawImage(MR_ART.img("canopy"), 0, hy2 - sk*0.55, W, sk*1.55);
+  }
+  // far to near
+  if(!_bridge) for(const d of G.decor) drawDecor(d);
+  /* after the scattered decor and before the gates: the railing is always nearer the camera
+     than anything growing out on the verge, and always further than a gate at the same depth */
+  if(!_bridge) for(const r of G.rails){ drawHedge(r, r.k); drawRail(r); }
+  const items = G.gates.map(g=>({z:g.z,k:"g",o:g}))
+             .concat(G.coins.map(c=>({z:c.z,k:"c",o:c})))
+             .concat(G.obs.map(o=>({z:o.z,k:"o",o:o})));
+  items.sort((a,b)=>b.z-a.z);
+  const _passed = [];
+  for(const it of items){
+    if(it.k==="o" && it.z < 0){ _passed.push(it.o); continue; }   /* [r113] nearer than her: drawn over her */
+    if(it.k==="g") drawGate(it.o); else if(it.k==="o") drawObstacle(it.o); else drawCoin(it.o);
+  }
+  /* [r41] HORIZON HAZE. The backdrop's treeline ends on a dark edge and the jungle floor
+     starts bright directly underneath it, so the join read as a ruled line across the screen.
+     A short warm band over the seam is what that distance actually looks like. */
+  (function(){
+    /* [r49] Reaching further down the verge than before. The ground plane loses its texture
+       to foreshortening long before the horizon, and without haze that stretch reads as a flat
+       green field rather than as distance - the depth the bands earn is thrown away in the
+       one place the eye checks for it. */
+    /* [r68] over the valley, not a band across the whole screen - the video has its own air -
+       but a glow where the bridge meets the sun, so its far end melts into the light instead
+       of stopping on a hard point */
+    if(_bridge){
+      const hy2 = horizonY(), R = W * 0.16, cx2 = worldX(0, 0);
+      const rg = ctx.createRadialGradient(cx2, hy2, 0, cx2, hy2, R);
+      rg.addColorStop(0, "rgba(255,214,140,.70)");
+      rg.addColorStop(0.45, "rgba(255,200,130,.28)");
+      rg.addColorStop(1, "rgba(255,196,130,0)");
+      ctx.fillStyle = rg; ctx.fillRect(cx2 - R, hy2 - R, R * 2, R * 2);
+      return;
+    }
+    const hy = horizonY(), band = (groundY()-hy)*0.38;
+    const hz = ctx.createLinearGradient(0, hy-band*0.22, 0, hy+band);
+    hz.addColorStop(0,    "rgba(255,196,130,0)");
+    hz.addColorStop(0.22, "rgba(255,190,125,.30)");
+    hz.addColorStop(0.55, "rgba(252,196,142,.15)");
+    hz.addColorStop(1,    "rgba(255,196,130,0)");
+    ctx.fillStyle = hz; ctx.fillRect(0, hy-band*0.22, W, band*1.22);
+  })();
+  drawTiger();
+  for(const o of _passed) drawObstacle(o);
+  // vignette
+  const vg = ctx.createRadialGradient(W/2,H*0.55,H*0.3,W/2,H*0.55,H*0.85);
+  /* [r40] .26 and warm, not .55 and near-black: the old value was set for a night scene and
+     it drags the corners of a daylight jungle down into mud. */
+  vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,"rgba(40,22,10,.26)");
+  ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+  drawFX();
+  ctx.restore();
+}
+
+/* ======================= screens / hud ======================= */
+const $ = id => document.getElementById(id);
+/* [r77] NO PANELS IN THE GAME. Between levels, at the fall and at the end the screen is VEILED -
+   the world and the HUD blur and dim - and only the voice plays. The .screen elements stay (the
+   lesson listens for #scWin to know the game is over) but their cards are never shown. */
+function veil(on){
+  const f = on ? "blur(7px) brightness(.86) saturate(.9)" : "";
+  [cvs, document.querySelector(".hud")].forEach(el => { if(!el) return;
+    el.style.transition = "filter .35s ease"; el.style.filter = f; });
+}
+/* run `cb` once the game's voice has nothing left to say - no sooner than minMs, no later than capMs */
+function whenVoiceDone(cb, minMs, capMs){
+  const t0 = Date.now();
+  (function poll(){
+    const idle = !VOICE.busy && !VOICE.queue.length;
+    const el = Date.now() - t0;
+    if((idle && el >= minMs) || el >= capMs){ cb(); return; }
+    setTimeout(poll, 100);
+  })();
+}
+/* ...and the lesson's: its instruction for this page is spoken by the engine outside the game */
+function whenLessonQuiet(cb, capMs){
+  let t0 = Date.now(); let quietSince = 0;
+  (function poll(){
+    /* [r126] the game's first words wait for its pictures too: the cap counts from the curtain's lift */
+    if(typeof _curtainUp !== "undefined" && _curtainUp){ t0 = Date.now(); quietSince = 0; setTimeout(poll, 100); return; }
+    const busy = !!(document.body && document.body.classList.contains("vo-lock"));
+    const now = Date.now();
+    if(busy) quietSince = 0; else if(!quietSince) quietSince = now;
+    if((quietSince && now - quietSince >= 350) || now - t0 >= capMs){ cb(); return; }
+    setTimeout(poll, 100);
+  })();
+}
+function hideScreens(){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on")); }
+function show(id){ hideScreens(); $(id).classList.add("on");
+  const c = $(id).querySelector(".card"); if(c) c.style.display = "none"; }
+function hud(){
+  if($("score")) $("score").textContent = G.score;        /* [r112] the score is no longer shown */
+  const _hOn  = window.MR_ART && MR_ART.src("heart");
+  const _hOff = window.MR_ART && MR_ART.src("heartOff");
+  let h="";
+  for(let i=0;i<3;i++){
+    const live = i<G.hearts;
+    h += (_hOn && _hOff) ? '<img alt="" src="'+(live?_hOn:_hOff)+'">'
+                         : (live ? "❤" : '<span class="off">❤</span>');
+  }
+  $("hearts").innerHTML = h;
+  const pw = $("pips"), n = (LEVELS[G.level]||{}).gates || 6;
+  if(pw){
+    if(pw.children.length !== n){
+      pw.innerHTML = "";
+      for(let i=0;i<n;i++) pw.appendChild(document.createElement("i"));
+    }
+    for(let i=0;i<n;i++){
+      const p = pw.children[i], got = G.pips[i];
+      p.classList.toggle("on", got === true);
+      p.classList.toggle("miss", got === false);
+    }
+  }
+  if(G.score>G.best){ G.best=G.score; saveBest(); }
+
+}
+/* [r113] ONE RUN, NOT SEPARATE LEVELS. Yasir: "we don't want to treat it as separate levels - the
+   transition should feel smooth: one level ends, the character keeps running, and the instruction for
+   the next level appears (the matra at the top centre goes back up and comes again with the new one)".
+   So between two levels nothing stops: no blur, no card. The chime; the matra is pulled up; «वाह! …» and
+   the next goal are spoken while it comes down again with the new matra; then the next words come.
+   Her speed and the obstacles carry straight on, and she gets a heart back, as before. */
+function levelDone(){
+  const N = LEVELS[G.level + 1];
+  if(N && G.mode === "play"){
+    if(G.between) return;
+    G.between = true;
+    VOICE.clear(); sfxLevel();
+    G.hearts = Math.min(3, G.hearts + 1); hud();
+    chipOut();
+    clearTimeout(G.nextT);
+    G.nextT = setTimeout(function(){
+      if(G.mode !== "play") return;
+      VOICE.say("level_next");
+      VOICE.say(N.target === U ? "goal_e" : "goal_ai");
+      setTimeout(function(){ if(G.mode === "play" && G.between) chipIn(N.target); }, 1300);
+      whenVoiceDone(function(){ if(G.mode === "play" && G.between) nextLevel(G.level + 1); }, 1600, 10000);
+    }, 900);
+    return;
+  }
+  return levelEnd();
+}
+function nextLevel(i){
+  const L = LEVELS[i];
+  G.level = i; G.target = L.target || U;
+  G.cleared = 0; G.right = 0; G.wrong = 0; G.missedWords = []; G.pips = [];
+  G.between = false;
+  setGoal();
+  const far = Math.max(0.9, ...G.obs.map(o => o.z + 0.45));
+  spawnGate(far); spawnGate(far + GATE_GAP);
+  hud();
+}
+/* [r115] THE CELEBRATION. Yasir: "when the game ends just a blurred screen does not feel appealing - make
+   it a celebration screen". So instead of the blur: the run slows to a stop (input off, the road clear),
+   the matra goes up; then Swifty turns round and cheers, hopping, under a warm sunburst; «शाबाश!» pops
+   in, and every word the child caught comes up as a golden orb, row by row under its matra, each with a
+   ding; confetti falls (the lesson's own, over the whole window); «शाबाश! आपने सारे शब्द पकड़ लिए!»; and a
+   beat later the lesson moves on, as before. */
+function celebrate(){
+  if(G.cel) return;
+  G.cel = true; VOICE.clear(); tutHide();
+  G.obs = []; G.coins = [];
+  chipOut(); sfxLevel();
+  clearTimeout(G.nextT);
+  G.nextT = setTimeout(function(){
+    G.mode = "win";
+    celShow();
+    const boom = () => { try{ if(typeof window.confettiCannon === "function") window.confettiCannon(); }catch(e){}
+                         sparkle(W/2, H*0.45, 40); };
+    boom(); setTimeout(boom, 1400);
+    setTimeout(function(){
+      VOICE.say("win");
+      whenVoiceDone(function(){
+        if(G.score > G.best){ G.best = G.score; saveBest(); }
+        /* [r125] Yasir: the end screen stayed up too long after its line - 1600 -> 500 ms */
+        setTimeout(function(){ show("scWin"); }, 500);    /* no card - the lesson listens for this to move on */
+      }, 1800, 9000);
+    }, 900);
+  }, 1300);
+}
+function celShow(){
+  /* [r118] Yasir: "in the last celebration screen of the game don't show every word she collected - only
+     Swifty will appear with the celebration". So: the warm wash, the turning sunburst, «शाबाश!», the
+     confetti, and Swifty cheering in the middle, bigger - no rows of words. */
+  const el = document.getElementById("cel"), rows = document.getElementById("celRows");
+  if(!el) return;
+  if(rows) rows.innerHTML = "";
+  el.classList.add("on");
+}
+function celHide(){ const el = document.getElementById("cel"); if(el) el.classList.remove("on"); }
+function levelEnd(){
+  if(!LEVELS[G.level + 1]) return celebrate();     /* [r115] the end of the game is the celebration */
+  /* [r77] Yasir: "We don't need instruction panel in the game, when the level ends the screen get
+     blurred and only VO plays: वाह! अब इस लेवल को पार कीजिए। + the next target".
+     [r79] ...and the voice has the stage to itself: the screen veils and the level-up chime plays
+     FIRST, then after a clear beat the two lines are spoken, and the music stays down for the
+     whole transition instead of rising in the gap between them. */
+  G.mode = "done"; VOICE.clear(); tutHide();
+  veil(true); MUSIC.setDuck("veil", true);
+  sfxLevel();
+  clearTimeout(G.nextT);
+  const N = LEVELS[G.level + 1];
+  G.nextT = setTimeout(function(){
+    if(N){
+      VOICE.say("level_next");
+      VOICE.say(N.target === U ? "goal_e" : "goal_ai");
+      whenVoiceDone(function(){
+        veil(false); MUSIC.setDuck("veil", false);
+        G.hearts = Math.min(3, G.hearts + 1);
+        startLevel(G.level + 1, true);         /* its goal has just been spoken */
+      }, 1600, 10000);
+    }else{
+      VOICE.say("win");
+      whenVoiceDone(function(){
+        G.mode = "win";
+        if(G.score > G.best){ G.best = G.score; saveBest(); }
+        show("scWin");                         /* no card - the lesson listens for this to move on */
+      }, 1600, 7000);
+    }
+  }, 1000);
+}
+function gameOver(){
+  G.mode="over"; G.deadT = G.t; tutHide(); hud();     /* the heart she just lost has to leave the row */
+  /* [r71] the pratfall: the hit already bonked; a slide whistle while she tumbles, a boing as she
+     lands on her seat - and "try again" waits for them rather than being talked over */
+  sfxSlideWhistle(0.10);
+  sfxBoing(0.72);
+  VOICE.clear();
+  setTimeout(function(){ if(G.mode === "over") VOICE.say("retry"); }, 1350);
+  if(G.score>G.best){ G.best=G.score; saveBest(); }
+  const t = G.target===U ? "ए ( े )" : "ऐ ( ै )";
+  $("overTip").textContent = t;
+  /* [r77] no card: once she has landed the screen veils while "try again" is spoken, then the
+     level restarts */
+  clearTimeout(G.nextT);
+  G.nextT = setTimeout(function(){ veil(true); }, 2100);
+  /* [r113] a fall while the next goal is being spoken restarts that NEXT level, not the finished one */
+  const _lv = G.between ? G.level + 1 : G.level;
+  setTimeout(function(){ veil(false); G.hearts = 3; hud(); startLevel(_lv); }, 6200);
+}
+function fullReset(){ G.score=0; G.hearts=3; clearTimeout(G.nextT); hud(); }
+
+/* [r54] No button handlers left to write: the cards advance themselves, and the only thing
+   the child controls is which lane she runs in - which is the keys and pads below. */
+
+/* ======================= boot ======================= */
+let last=0;
+function loop(ts){
+  const dt = Math.min(0.05, (ts-last)/1000 || 0.016); last=ts;
+  if(!_curtainUp) update(dt);          /* [r126] nothing moves under the curtain */
+  render(); watchLessonVO();
+  requestAnimationFrame(loop);
+}
+function boot(){
+  resize(); seedDecor(); seedRails(); hud();
+  /* [r50] STRAIGHT INTO THE GAME. There is no start card any more: the screen arrives, the
+     level card names the matra, and the world is already moving - slowly - under the
+     instruction. The card and its button stay in the markup because "शुरू से" on the end
+     screens still goes back to them. */
+  requestAnimationFrame(loop);
+  fullReset(); startLevel(0);
+}
+/* the lesson releases the hold when its instruction clip ends; standalone, nothing calls this
+   and the ten-second backstop below lets the game go by itself */
+window.MR_begin = function(){ G.hold = false; G.holdT = 0; };
+/* A read-only window onto what is actually moving. G.ground accumulates the SAME v the gates,
+   the decor and the railing are advanced by, so sampling it over a known interval measures the
+   world's real speed - which pixel matching could not do here: the road repeats often enough
+   that a frame-to-frame match keeps locking onto the wrong stone. */
+window.MR_DEBUG = function(){
+  var sc = document.querySelector(".mr-root .screen.on");
+  /* the railing is drawn in array order, so "in depth order" is a property of the array -
+     checkable from outside rather than inferred from a screenshot */
+  var outOfOrder = 0;
+  for(var i=1;i<G.rails.length;i++) if(G.rails[i].z > G.rails[i-1].z) outOfOrder++;
+  var hz = G.rails.filter(function(r){ return r.k % HEDGE_EVERY === 0; })
+                  .map(function(r){ return r.z; }).sort(function(a,b){ return a-b; });
+  var gaps = [];
+  for(var j=1;j<hz.length;j++) gaps.push(+(hz[j]-hz[j-1]).toFixed(3));
+  return { hold: G.hold, holdT: +G.holdT.toFixed(2), ramp: G.ramp, ground: G.ground,
+           level: G.level, mode: G.mode, hearts: G.hearts, cleared: G.cleared,
+           levels: LEVELS.length, levelNames: LEVELS.map(function(l){ return l.name; }),
+           rails: G.rails.length, railsOutOfOrder: outOfOrder,
+           hedgeGaps: gaps.filter(function(v,k,a){ return a.indexOf(v)===k; }),
+           audio: AC ? { state: AC.state, music: MUSIC.on, bar: MUSIC.bar,
+                   bgm: BGM.buf ? +BGM.buf.duration.toFixed(3) : (BGM.failed ? "failed" : (BGM.loading ? "loading" : "idle")),
+                   bgmPlaying: !!BGM.src, bgmChannels: BGM.buf ? BGM.buf.numberOfChannels : 0,
+                   busGain: MUSBUS ? +MUSBUS.gain.value.toFixed(3) : null,
+                         gain: +MUSBUS.gain.value.toFixed(3) } : null,
+           screen: sc ? sc.id : "",
+           gates: G.gates.map(function(g){
+             return { z: +g.z.toFixed(3), ok: g.okLane, done: !!g.done, pin: !!g.pin,
+                      word: (g.words[g.okLane] || {}).id, spoken: !!g.spoken, heard: !!g.heard,
+                      hue: g.hue }; }),
+           waitF: G.waitF == null ? 1 : +G.waitF.toFixed(3), local: LOCAL,
+           bgmEl: BGM.el ? { paused: BGM.el.paused, vol: +BGM.el.volume.toFixed(3),
+                             t: +BGM.el.currentTime.toFixed(2) } : null,
+           /* [r112] the temple-run state */
+           lane: G.lane, jumpT: +G.jumpT.toFixed(2), slideT: +G.slideT.toFixed(2), hitT: +G.hitT.toFixed(2),
+           tut: G.tut ? { step: G.tut.step, frozen: !!G.tut.frozen, done: !!G.tut.done, prompted: !!G.tut.prompted } : null,
+           runPh: G.runPh || 0, t: G.t, cel: G.cel, caught: G.caught.map(function(c){ return c.t; }),
+           errs: G.gates.filter(function(g){ return !g.done; }).map(function(g){ return g.err || 0; }),
+           tutDone: G.tutDone, speed: +G.speed.toFixed(4), speedT: +G.speedT.toFixed(4), between: G.between,
+           hang: (document.getElementById("hang") || {}).className || "",
+           chip: (document.getElementById("matraChip") || {}).textContent || "",
+           pairs: G.gates.filter(function(g){ return !g.done; }).map(function(g){ return g.words.map(function(w){ return w.t + (w.ok ? "*" : ""); }).join("/"); }),
+           obs: G.obs.map(function(o){ return { k: o.k, z: +o.z.toFixed(3), lane: o.lane, done: o.done, ok: o.ok, pin: o.pin }; }),
+           coins: G.coins.length };
+};
+/* one frame, on demand, so the cost of EVERYTHING can be timed - not just the floor, which is
+   the part that is easy to reach and the part least likely to be the problem */
+window.MR_DEBUG.render = function(){ render(); };
+/* Hold the world still so the SAME picture can be drawn repeatedly. Timing a moving scene
+   compares different pictures: the trees, the gates and the hedge are all somewhere else by
+   the next sample, and the per-layer differences come out noisy enough to go negative. */
+window.MR_DEBUG.freeze = function(on){ G.frozen = !!on; };
+
+if(document.fonts && document.fonts.load){
+  Promise.all([
+    document.fonts.load('700 40px "Baloo 2"', "पुल फूल"),
+    document.fonts.load('800 40px "Baloo 2"', "शाबाश")
+  ]).then(boot).catch(boot);
+  setTimeout(()=>{ if(!last) boot(); }, 2500);
+}else boot();
+})();
+</script>
+
+<!-- ============================ lesson bridge ============================
+     [r36] This file is still a complete, standalone game: open index.html on its own and
+     NOTHING below runs, because it all sits behind `window.parent === window`. It only wakes up
+     when the lesson embeds it, and then it does two things and no more:
+       · gives the child a way onward that is always on screen, so a mini-game with no natural
+         end can never become a dead end inside a lesson that has no आगे button
+       · tells the lesson when the game was won or lost, so the lesson can react
+     Nothing in the game's own code is touched - the bridge only listens to it.
+     ===================================================================== -->
+<script id="matra-runner-bridge">
+(function(){
+  "use strict";
+  if(window.parent === window) return;              // standalone: behave exactly as before
+  var post = function(ev, extra){
+    var msg = {source:"matra-runner", event:ev};
+    if(extra) for(var k in extra) msg[k] = extra[k];
+    try{ window.parent.postMessage(msg, "*"); }catch(e){}
+  };
+
+  /* the way onward. Styled as one of the game's own HUD buttons so it belongs to the game
+     rather than looking like the lesson reaching in. */
+  var b = document.createElement("button");
+  b.className = "mute"; b.id = "mrDone"; b.type = "button";
+  b.textContent = "आगे ➜";
+  b.setAttribute("aria-label", "आगे बढ़ें");
+  b.style.cssText = "width:auto;padding:0 .75em;font-weight:800;margin-left:auto;";
+  var top = document.querySelector(".hud-top");
+  if(top) top.appendChild(b);
+  b.addEventListener("click", function(){ post("done", {reason:"button"}); });
+
+  /* and a word when the game itself reaches an ending */
+  var watch = function(id, ev){
+    var el = document.getElementById(id);
+    if(!el) return;
+    new MutationObserver(function(){
+      if(el.classList.contains("on")) post(ev);
+    }).observe(el, {attributes:true, attributeFilter:["class"]});
+  };
+  watch("scWin", "win");
+  watch("scOver", "over");
+
+  post("ready");
+})();
+</script>
+
+</body>
+</html>

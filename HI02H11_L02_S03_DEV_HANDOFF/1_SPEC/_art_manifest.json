@@ -1,0 +1,17 @@
+{
+  "all": {
+    "obj_seb": "a single deep red apple, rounded, with one green leaf and a short brown stem fused to the top so the whole apple is ONE SINGLE CONNECTED SHAPE, thick dark red-brown outline, glossy highlight; deep saturated red, NOT pink and NOT pale",
+    "obj_ped": "a single leafy tree drawn as ONE SINGLE CONNECTED SHAPE: a thick brown trunk FUSED DIRECTLY INTO a big rounded deep-green canopy with no gap and no detached leaves, thick dark brown outline around the whole silhouette",
+    "obj_mez": "a small wooden table seen from the front at a slight angle, warm saturated medium-brown wood, flat rectangular top with four legs FUSED to the top so the table is ONE SINGLE CONNECTED SHAPE, thick dark brown outline, nothing on the table",
+    "obj_pair": "a single bare child's foot and ankle seen from the side, warm tan-brown skin, five small rounded toes FUSED to the foot so it is ONE SINGLE CONNECTED SHAPE, thick dark brown outline, friendly and simple, no leg above the ankle and no shoe",
+    "obj_bail": "a sturdy Indian bullock (ox) standing in side view, warm saturated grey-brown body with a shoulder hump, two short curved horns and four legs all FUSED to the body so the animal is ONE SINGLE CONNECTED SHAPE, thick dark brown outline, calm friendly face",
+    "obj_bag": "a child's school backpack standing upright, bright saturated blue body with a yellow front pocket and two straps FUSED to the bag so it is ONE SINGLE CONNECTED SHAPE, thick dark navy outline; NOT white and NOT pale",
+    "obj_pen": "a single ballpoint pen standing at a slight angle, bright saturated blue barrel with a darker blue cap and a silver nib FUSED to the barrel so the pen is ONE SINGLE CONNECTED SHAPE, thick dark navy outline, no writing and no paper"
+  },
+  "pending": {},
+  "scenes_do_not_key": [
+    "scn_bageecha",
+    "scn_likhna",
+    "scn_seb_khana"
+  ]
+}
