@@ -70,3 +70,34 @@ The previous S01-based build is kept intact in `../_backup_s01based/`.
   the page-2 lines).
 * The S01-based review deck and `dist/` from round 1 describe the OLD build; they are in
   `../_backup_s01based/`. Rebuild with `PYTHONUTF8=1 python 1_SPEC/build_skill_HI02H11_L02_S03.py`.
+
+## Round 3 (2026-10-22) — S02's 7 QA-pass commits applied (`fb835c9 … 27cea22`)
+
+S02 moved from `992e684` to `27cea22`: bugs 1-8 fixed, the Hindi-game-gender-identify transition screen
+(`phaseBlurTransition`, Swifty `peeking_talk_up.webp`, `sfx_whoosh`), background music down to 40% then
+30%, two more bug-fix rounds, and a proper 7 s inactivity nudge. Applied to S03 as:
+
+* `4_ENGINE/lesson_template.html` — taken from S02 @ 27cea22, then S03's modules re-injected
+* `4_ENGINE/train_modules.js`, `train_styles.css`, `1_SPEC/build_skill_HI02H11_L02_S03.py` — 3-way merged
+  (S02 992e684 → 27cea22 onto S03's files): **0 conflicts**; the builder changes were all mechanical
+  (whoosh sound, new gate, old gate lip-sync removed), none carried S02 content
+* new assets: `assets/Audio/sfx_whoosh.ogg`, `assets/UI/peeking_talk_up.webp`
+* the runner game is untouched by all 7 commits, so its ए/ऐ version stands as is
+
+**Proof of sameness:** the built S03 page compared with S02's built page (card data, cache stamps and the
+lesson code masked) differs only in the S03 runner content and the े/ै highlight — every other line of
+~19,000 is identical. All 18 screens mount with 0 console errors; the new transition screen plays.
+Pre-merge copies of every replaced file: `../_backup_draft1/pre_s02_7commits_2026-10-22/`.
+
+## 2026-10-22 — four requested changes
+
+1. **Transitions** — verified identical to S02 @ 27cea22: same engine code, same `gate` /
+   phase-title / ui_sfx config, byte-identical `vo_pt_*` clips and `sfx_whoosh`, same placement
+   (before T1, before G5D, before MG1); captured all three side by side, frame for frame the same.
+2. **Page 1 matra boxes** — S02's `translateY(-.13em)` was tuned for «◌ु» hanging low; «◌े / ◌ै» rise
+   above the circle and stuck out of the card. MATRA_PAIRS now centres the glyph's measured INK in its
+   card (`centreInk` in train_modules.js).
+3. **Page 16 (मुझे ___ खाना अच्छा लगता है)** — options are text only (`text_only=True`, S02's own switch).
+4. **Scenes** — the user's new `scn-likhna / scn-bageecha / scn-seb-khana` replace the old three,
+   cropped to the picture inside their baked-in frame; the rung-2 spotlight positions re-measured.
+   Old scenes kept in `../_backup_draft1/replaced_images_2026-10-22/`.
