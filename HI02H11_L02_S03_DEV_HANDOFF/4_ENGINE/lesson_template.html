@@ -4122,7 +4122,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 .mx-v2 .mx-pic{ width:auto; height:auto; background:transparent; border:none; box-shadow:none;
   transition:opacity .35s ease; }
 .mx-v2 .mx-pic.mp-wait{ opacity:0; }
-.mx-v2 .meet-pic-box.mex-pic .pic-img{ width:220px; height:220px; }
+.mx-v2 .meet-pic-box.mex-pic .pic-img{ width:260px; height:260px; }   /* [S03 QA p5] was 220 - slightly larger, the same on pages 3 and 5 */
 .mx-v2 .meet-pic-box.mex-pic .pic-emoji{ font-size:170px; }
 .mx-wordrow{ display:flex; align-items:center; justify-content:center; gap:26px; }
 .mx-wordrow.mp-in{ animation:mxIn .42s cubic-bezier(.34,1.4,.6,1) both; }
@@ -5514,8 +5514,11 @@ function armIdleVo(){
     if(Date.now() - _idleSince < ms) return;
     // [27f] ONE reminder, then done for this slide. Mark spent and stop the ticker BEFORE speaking,
     // so a pointerdown arriving during the replay cannot re-arm it.
-    _idleVoFired = true;
-    stopIdleVo();
+    /* [r150] Yasir: "the VO replays only 1 time - it should play after each 7 seconds, not just once, if the
+       user remains inactive". The ticker is no longer stopped after a reminder: it keeps watching, and since
+       the reminder itself is sound (the clock holds while it plays), the next one comes 7 s after it ENDS -
+       and so on, every 7 s of silence, until the child acts or the page is answered (state.locked) or left. */
+    _idleSince = 0;
     SwiftPAL.emit("idle_vo_replay", { slide_id: s.id, phase: s.phase });
     if(state.replayAudio) state.replayAudio(); else autoPlayChain(s);
   }, IDLE_VO_TICK);
@@ -10348,6 +10351,13 @@ SlideModules.MATCH_VACHAN_PAIRS    = SlideModules.MATCH_GENDER_PAIRS;
             const cx0 = (cb.left - rect.left) / _mhScale;
             x0 = cx0 + mb.dx0 - 1; x1 = cx0 + mb.dx1 + 1;   /* canvas px = CSS px */
             y0 = baseline + mb.dy0 - 1; y1 = baseline + mb.dy1 + 1;
+            /* [S03 QA pages 3, 5] stop at the TOP of the शिरोरेखा: the hook meets the headline, and a
+               box reaching below that line painted a stretch of the headline orange as well */
+            const _cv = (_markBox._c = _markBox._c || document.createElement("canvas").getContext("2d"));
+            const _cs = getComputedStyle(el);
+            _cv.font = _cs.fontWeight + " " + _cs.fontSize + " " + _cs.fontFamily;
+            const _top = _cv.measureText(strip(base)).actualBoundingBoxAscent;
+            if(isFinite(_top) && _top > 0) y1 = Math.min(y1, baseline - _top + 0.5);
           } else { y0 = 0; y1 = baseline * 0.45; }
           below = false;
         }
@@ -11180,7 +11190,12 @@ SlideModules.MATCH_VACHAN_PAIRS    = SlideModules.MATCH_GENDER_PAIRS;
         c.el.classList.add("is-read");
         say(clip(src.audio), ()=> setTimeout(()=>{ c.el.classList.remove("is-read"); next(); }, 220));
       }), fin), ()=>{ revealAll(); if(done) done(); });
-      state.replayAudio = ()=>{ if(hintBusy) return; say(A(slide, "prompt"), ()=> readOptions(()=>{})); };
+      /* [S03 QA pages 8-10] after the 3rd wrong attempt the other coaches are locked and only the answer
+         is left, so the speaker (and the idle reminder, which calls the same function) must not read the
+         options out again as if they could still be chosen: it repeats the rung-3 line instead. */
+      state.replayAudio = ()=>{ if(hintBusy) return;
+        if((state.scaffoldLevel || 0) >= 3){ say(A(slide, "hint3") || A(slide, "prompt"), ()=>{}); return; }
+        say(A(slide, "prompt"), ()=> readOptions(()=>{})); };
       train.whenParked(()=>{ armed = true;
         say(A(slide, "prompt"), ()=> setTimeout(()=> readOptions(()=>{}), 260)); });
     }

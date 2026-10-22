@@ -101,3 +101,30 @@ Pre-merge copies of every replaced file: `../_backup_draft1/pre_s02_7commits_202
 4. **Scenes** — the user's new `scn-likhna / scn-bageecha / scn-seb-khana` replace the old three,
    cropped to the picture inside their baked-in frame; the rung-2 spotlight positions re-measured.
    Old scenes kept in `../_backup_draft1/replaced_images_2026-10-22/`.
+
+## 2026-10-22 — QA list (title slide, pages 1-16)
+
+Done:
+* **S02 `6f621ea`** (idle reminder repeats every 7 s of silence) merged into the engine template.
+* **Title** VO text → «नमस्ते दोस्त! मैं हूँ स्विफ्टी। आज हम ए और ऐ की मात्रा वाले शब्द पढ़ेंगे।» (needs recording).
+* **Page 1** VO → S02's script shape «यह है ए। इसकी मात्रा है।» (the bare ◌े cannot be spoken) (needs recording).
+* **Page 2** the «स। से। सेब।» sound-by-sound line removed.
+* **Pages 3, 5** े / ै highlight now stops at the top of the शिरोरेखा (matraHL, train_modules.js).
+* **Page 4** foot re-centred on its visual weight and given the table's 4:3 footprint.
+* **Pages 3, 5** pictures 220 → 260 px.
+* **Pages 8-10** after the 3rd wrong attempt the speaker (and the idle reminder) repeats the rung-3
+  line instead of reading the locked options out.
+* **Page 11** hint 1 = S02's line (S02's human take); hint 2 per card «पैसा में ऐ की मात्रा है।».
+* **Page 12** S02's hint 1 / hint 2 (S02's human takes) and rung-3 line «से को सेब वाले डिब्बे में डालिए। से, ब… सेब।».
+* **Page 13** S02's hint 1 (S02's take), hint 2 «… अब इसे सही मात्रा वाली बोगी में डालिए।», hint 3 «… वाली बोगी में डालिए।».
+* **Pages 14-16** S02's sentence ladder: per-screen question on hint 1, «जो वाक्य सही लग रहा है, वही शब्द चुनिए।»
+  (S02's take), «<sentence> <word> चुनिए।» on hint 3.
+
+Completed with a new key (2026-10-22):
+* the 23 new VO lines generated (Kore, -16 LUFS), none short; 6 more lines use S02's human takes.
+* Page 11: an Indian ₹ coin and a single-colour (golden-yellow) बेर; the four tray pictures normalised to
+  the same 42 % coverage of a square canvas, so they read as one size.
+* Verified: speaker after the 3rd wrong tap plays only the rung-3 line; the mechanics driver walks every
+  activity with S02's VO order (page 11 hint 2 = «पैसा में ऐ की मात्रा है।» after the options are read).
+* Page 11 coin replaced again with the user's own ₹1 coin picture (`paisa.png`), scaled to the same
+  footprint as the other tray pictures; the generated coin is in `../_backup_draft1/replaced_images_2026-10-22/`.

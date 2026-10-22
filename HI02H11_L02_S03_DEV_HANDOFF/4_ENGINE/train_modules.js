@@ -633,6 +633,13 @@
             const cx0 = (cb.left - rect.left) / _mhScale;
             x0 = cx0 + mb.dx0 - 1; x1 = cx0 + mb.dx1 + 1;   /* canvas px = CSS px */
             y0 = baseline + mb.dy0 - 1; y1 = baseline + mb.dy1 + 1;
+            /* [S03 QA pages 3, 5] stop at the TOP of the शिरोरेखा: the hook meets the headline, and a
+               box reaching below that line painted a stretch of the headline orange as well */
+            const _cv = (_markBox._c = _markBox._c || document.createElement("canvas").getContext("2d"));
+            const _cs = getComputedStyle(el);
+            _cv.font = _cs.fontWeight + " " + _cs.fontSize + " " + _cs.fontFamily;
+            const _top = _cv.measureText(strip(base)).actualBoundingBoxAscent;
+            if(isFinite(_top) && _top > 0) y1 = Math.min(y1, baseline - _top + 0.5);
           } else { y0 = 0; y1 = baseline * 0.45; }
           below = false;
         }
@@ -1465,7 +1472,12 @@
         c.el.classList.add("is-read");
         say(clip(src.audio), ()=> setTimeout(()=>{ c.el.classList.remove("is-read"); next(); }, 220));
       }), fin), ()=>{ revealAll(); if(done) done(); });
-      state.replayAudio = ()=>{ if(hintBusy) return; say(A(slide, "prompt"), ()=> readOptions(()=>{})); };
+      /* [S03 QA pages 8-10] after the 3rd wrong attempt the other coaches are locked and only the answer
+         is left, so the speaker (and the idle reminder, which calls the same function) must not read the
+         options out again as if they could still be chosen: it repeats the rung-3 line instead. */
+      state.replayAudio = ()=>{ if(hintBusy) return;
+        if((state.scaffoldLevel || 0) >= 3){ say(A(slide, "hint3") || A(slide, "prompt"), ()=>{}); return; }
+        say(A(slide, "prompt"), ()=> readOptions(()=>{})); };
       train.whenParked(()=>{ armed = true;
         say(A(slide, "prompt"), ()=> setTimeout(()=> readOptions(()=>{}), 260)); });
     }

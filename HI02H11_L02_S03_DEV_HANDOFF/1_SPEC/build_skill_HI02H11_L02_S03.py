@@ -294,6 +294,8 @@ def _matra_cue_ms(audio_id, line, phrase="इसकी"):
     return int(secs * 1000 * (before / float(total)))
 
 def _sound_cues_ms(audio_id, n):
+    if not audio_id:                 # [QA] a build screen may have no «स। से। सेब।» line
+        return None
     """Where each of the `n` sounds STARTS inside «प। पु। पुल।» — in ms.
 
     This one clip is not prose, it is three sounds with deliberate silence between them, and that
@@ -406,8 +408,10 @@ def s_intro(sid):
     heading = p
     # `cue_ms` is when «इसकी मात्रा है» starts inside each clip. The matra is highlighted THEN,
     # rather than when it pops in - the ask is that the glow lands on the words that name it.
-    _u_line  = "यह है ए। इसकी मात्रा देखिए।"      # [S03] the deck's page-2 lines
-    _uu_line = "यह है ऐ। इसकी मात्रा देखिए।"
+    # [QA] S02's page-1 script: «यह है उ। इसकी मात्रा है — ु।». A bare ◌े / ◌ै cannot be spoken, so the
+    # line ends on «इसकी मात्रा है।» and the mark lands on screen as it is said.
+    _u_line  = "यह है ए। इसकी मात्रा है।"
+    _uu_line = "यह है ऐ। इसकी मात्रा है।"
     # [r121] Yasir: «when VO says "यह है उ" the letter appears, then it says "इसकी मात्रा है" and
     # the matra appears - all in sync with the VO». Each clip is four phrases with clear pauses
     # (measured: vo_pair_u 30 · 1260 · 2320 · 3970 ms), so the letter lands on the 2nd and the
@@ -465,8 +469,9 @@ def s_build(sid, base_word, base_slug, consonant, matra, syllable, result_word, 
                     % (consonant, MATRA_NAME[matra], syllable)),
         "result": vo("vo_result_" + g,
                      "अब %s जुड़ने पर %s बनता है।" % (result_word[-1], result_word)),
-        "sounds": vo("vo_sounds_" + g, sounds),
+        "sounds": vo("vo_sounds_" + g, sounds) if sounds else None,
     }
+    a = {k: v for k, v in a.items() if v}
     bk = key_of_opt(base_word)
     ONSET_LINE  = AUDIO_TEXT.get(a["onset"], "")
     RESULT_LINE = AUDIO_TEXT.get(a["result"], "")
@@ -617,9 +622,10 @@ def s_word_build(sid):
         slots.append({"word": word, "head": head, "tail": tail, "matra": matra_of(word),
                       "img": pic(k), "emoji": OBJ[k][1],
                       "name_audio": name_clip(word),
+                      # [QA p12] S02's rung-3 line, which sounds the word out: «पु को पुल वाले डिब्बे में डालिए। पु, ल… पुल।»
                       "hint3_audio": vo("vo_p1_h3_" + slug(k),
-                                        "%s लगाने से %s %s है। %s को खाली जगह में डालिए।"
-                                        % (head, word, verb, head)),
+                                        "%s को %s वाले डिब्बे में डालिए। %s, %s… %s।"
+                                        % (head, word, head, tail, word)),
                       "correct_audio": vo("vo_wb_" + slug(k),
                                           "शाबाश! %s बन %s।" % (word, gone))})
         opts.append({"akshar": head, "audio": vo("vo_ak_" + slug(k), head)})
@@ -629,9 +635,13 @@ def s_word_build(sid):
             "prompt_hi": "चित्र देखकर सही अक्षर से शब्द पूरा कीजिए।",
             "audio": {
                 "prompt": vo("vo_%s_prompt" % sid.lower(), "चित्र देखकर सही अक्षर से शब्द पूरा कीजिए।"),
+                # [QA p12] S02's page-12 lines
                 "hint1": vo("vo_%s_h1" % sid.lower(),
-                            "फिर से देखिए। चित्र देखकर सही अक्षर से शब्द पूरा कीजिए।"),
-                "hint2": vo("vo_%s_prompt" % sid.lower(), "चित्र देखकर सही अक्षर से शब्द पूरा कीजिए।"),
+                            "फिर से देखिए। चित्र का नाम सोचिए और देखिए शब्द पूरा करने के लिए "
+                            "कौन-सा अक्षर लगेगा।"),
+                "hint2": vo("vo_%s_h2" % sid.lower(),
+                            "नाम ध्यान से सुनिए। जिस शब्द की शुरुआत इस अक्षर से होती है, उसी "
+                            "डिब्बे में इसे डालिए।"),
                 "hint3": vo("vo_%s_h3_any" % sid.lower(),
                             "जो अक्षर चमक रहा है, उसे उसी डिब्बे में डालिए।")},
             "data": {"slots": slots, "options": opts}}
@@ -645,7 +655,7 @@ def _full(pre, word, post):
     return (pre + word + post).replace("  ", " ").strip()
 
 
-def s_sentence(sid, scene, pre, post, answer, options, correct_line, h3_line, text_only=False):
+def s_sentence(sid, scene, pre, post, answer, options, correct_line, ask, text_only=False):
     """Screens 13–16 — the new module, four instances.
 
     The three instruction lines are identical on all four screens, so `once` gives them one
@@ -669,10 +679,13 @@ def s_sentence(sid, scene, pre, post, answer, options, correct_line, h3_line, te
                 "prompt": once("vo_sc_prompt", "चित्र देखकर सही शब्द चुनकर वाक्य पूरा कीजिए।"),
                 # rung 1 asks a DIFFERENT question of the picture on each of the four screens,
                 # so it is per screen and not `once`
-                # [S03] the deck's lines: one shared rung 1 and rung 2, a per-screen rung 3
-                "hint1": once("vo_sc_h1", "फिर से देखिए। चित्र देखकर सही शब्द चुनकर वाक्य पूरा कीजिए।"),
-                "hint2": once("vo_sc_prompt", "चित्र देखकर सही शब्द चुनकर वाक्य पूरा कीजिए।"),
-                "hint3": vo("vo_%s_h3" % sid.lower(), h3_line),
+                # [QA p14-16] S02's sentence ladder, unchanged
+                "hint1": vo("vo_%s_h1" % sid.lower(),
+                            "फिर से पढ़िए। चित्र देखिए, %s? सही शब्द चुनकर वाक्य पूरा कीजिए।" % ask),
+                "hint2": once("vo_sc_h2", "जो वाक्य सही लग रहा है, वही शब्द चुनिए।"),
+                "hint3": vo("vo_%s_h3" % sid.lower(),
+                            "%s %s चुनिए।" % ((pre + answer + post).replace("  ", " ").strip(),
+                                              answer)),
                 "correct": vo("vo_%s_correct" % sid.lower(), correct_line)},
             "data": {"scene_img": pic(scene), "scene_emoji": SCENE[scene],
                      "sentence_pre": pre, "sentence_post": post,
@@ -716,7 +729,7 @@ def build_slides():
     S = []
     # ---- TUTORIAL · deck pages 2-6 -----------------------------------------------------------
     S.append(s_intro("T1"))                                                   # page 2
-    S.append(s_build("T2", "सब", "sab", "स", U, "से", "सेब", "स। से। सेब।",     # page 3
+    S.append(s_build("T2", "सब", "sab", "स", U, "से", "सेब", None,     # [QA p2] no «स। से। सेब।»
                      base_more="ये सब बच्चे हैं।"))
     S.append(s_pair("T3", ["मेज़", "पेड़"],                                     # page 4
                     "आइए, ए की मात्रा वाले कुछ शब्द देखें।",
@@ -738,8 +751,8 @@ def build_slides():
     S.append(s_tap("G2", ["मेज़", "पैन", "सेब"], "पैन", UU,                    # page 9
                    "शाबाश! पैन शब्द में ऐ की मात्रा है।"))
 
-    g4_h1 = vo("vo_g4_h1", "फिर से पढ़िए। इस शब्द को उसकी सही मात्रा वाले डिब्बे में डालिए।")
-    p2_h1 = vo("vo_p2_h1", "फिर से सुनिए। चित्र को सही मात्रा वाले डिब्बे में डालिए।")
+    g4_h1 = vo("vo_g4_h1", "फिर से पढ़िए। शब्द में कौन-सी मात्रा है, देखिए और उसे उसी मात्रा वाले डिब्बे में डालिए।")
+    p2_h1 = vo("vo_p2_h1", "फिर से सुनिए। चित्र का नाम ध्यान से सुनिए और देखिए उसमें कौन-सी मात्रा है।")
     g4_bins = [{"key": m, "label": LETTER[m], "audio": LETTER_VO[m], "matra": m} for m in (U, UU)]
     # S02's G5 demo: letters onto their matra coaches, watch-only, handing its train on to G5
     S.append({"id": "G5D", "phase": "guided", "eis": "iconic", "type": "TRAIN_SORT",
@@ -756,12 +769,12 @@ def build_slides():
                                                       % (LETTER[m], LETTER[m]))}
                                  for m in (U, UU)]}})
     # page 10 - words into ए / ऐ coaches; rung 2 reads every card left, then the deck's line
-    g4_h2 = once("vo_g4_h2", "इस शब्द को उसकी सही मात्रा वाले डिब्बे में डालिए।")
     g4_cards = []
     for w in ["शेर", "बेर", "थैला", "पैसा"]:
         c = sort_card(w, vo("vo_ok_%s" % slug(key_of(w)),
                             "शाबाश! %s शब्द में %s की मात्रा है।" % (w, LETTER[matra_of(w)])))
-        c["hint2_audio"] = g4_h2
+        c["hint2_audio"] = vo("vo_g4_h2_%s" % slug(key_of(w)),                 # [QA p11]
+                              "%s में %s की मात्रा है।" % (w, LETTER[matra_of(w)]))
         c["hint3_audio"] = vo("vo_g4_h3_%s" % slug(key_of(w)),
                               "%s शब्द में %s की मात्रा है। इसे %s वाले डिब्बे में डालिए।"
                               % (w, LETTER[matra_of(w)], LETTER[matra_of(w)]))
@@ -788,15 +801,15 @@ def build_slides():
 
     # ---- PRACTICE · deck pages 12, 13, 17, 14, 16 ------------------------------------------------
     S.append(s_word_build("P1"))                                               # page 12
-    p2_h2 = once("vo_p2_h2", "मात्रा देखिए। चित्र को सही मात्रा वाले डिब्बे में डालिए।")
     p2_cards = []
     for w in ["पैन", "मेज़", "शेर", "बैग"]:                                    # page 13
         c = sort_card(w, vo("vo_okp_%s" % slug(key_of(w)),
                             "शाबाश! %s में %s की मात्रा है।" % (w, LETTER[matra_of(w)])))
-        c["hint2_audio"] = p2_h2
+        c["hint2_audio"] = vo("vo_p2_h2_%s" % slug(key_of(w)),                 # [QA p13] S02's lines
+                              "%s में %s की मात्रा है। अब इसे सही मात्रा वाली बोगी में डालिए।"
+                              % (w, LETTER[matra_of(w)]))
         c["hint3_audio"] = vo("vo_p2_h3_%s" % slug(key_of(w)),
-                              "%s में %s की मात्रा है। इसे %s वाले डिब्बे में डालिए।"
-                              % (w, LETTER[matra_of(w)], LETTER[matra_of(w)]))
+                              "%s को %s की मात्रा वाली बोगी में डालिए।" % (w, LETTER[matra_of(w)]))
         p2_cards.append(c)
     S.append(s_sort("P2", "practice", "picture", g4_bins, p2_cards,
                     "चित्र का नाम सुनिए और उसे सही मात्रा वाले डिब्बे में डालिए।",
@@ -805,13 +818,13 @@ def build_slides():
     # three sentences - the SME deleted page 15 (मेरे ___ में दर्द है). Order = the deck's reorder.
     S.append(s_sentence("P3", "scn_likhna", "मैं ", " से लिखता हूँ।", "पैन",       # page 17
                         ["पैन", "पेड़", "बैल"], "शाबाश! मैं पैन से लिखता हूँ।",
-                        "चित्र में बच्चा पैन से लिख रहा है। पैन को खाली जगह में डालिए।"))
+                        "बच्चा किससे लिख रहा है"))
     S.append(s_sentence("P4", "scn_bageecha", "बगीचे में एक बड़ा ", " है।", "पेड़",  # page 14
                         ["पेड़", "बैल", "पैन"], "शाबाश! बगीचे में एक बड़ा पेड़ है।",
-                        "चित्र में बगीचे में एक बड़ा पेड़ है। पेड़ को खाली जगह में डालिए।"))
+                        "बगीचे में क्या है"))
     S.append(s_sentence("P5", "scn_seb_khana", "मुझे ", " खाना अच्छा लगता है।", "सेब",  # page 16
                         ["सेब", "बैग", "मेज़"], "शाबाश! मुझे सेब खाना अच्छा लगता है।",
-                        "चित्र में बच्चा सेब खा रहा है। सेब को खाली जगह में डालिए।",
+                        "बच्चा क्या खा रहा है",
                         text_only=True))      # [2026-10-22] user: page 16 - text only on the options
 
     # S02's sequence (r127 / r134): the G5 demo and G5 open the guided block, then the taps, then G4
@@ -841,7 +854,7 @@ def build_card(slides):
     # [r134] Yasir: the cover's «आज हम मात्राओं के बारे में जानेंगे» becomes page 1's line, which page 1
     # no longer speaks. Re-cut from the two human recordings (1_SPEC/edit_lesson_voice_r134.py).
     # [S03] the deck's greeting + page 2's line, merged onto the cover the way S02 r134 merged its own
-    vo("vo_landing", "हेलो दोस्त! मैं हूँ स्विफ्टी। आज हम ए और ऐ की मात्रा वाले शब्द पढ़ेंगे।")
+    vo("vo_landing", "नमस्ते दोस्त! मैं हूँ स्विफ्टी। आज हम ए और ऐ की मात्रा वाले शब्द पढ़ेंगे।")   # [QA] नमस्ते, as S02
     vo("vo_try_again", "एक बार फिर सुनिए।")          # आप, with everything else
 
     counts = {}

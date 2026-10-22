@@ -1,17 +1,16 @@
 # HI02H11_L02_S03 (ए / ऐ) · «मात्राओं की रेल» — VO recording list
 
-115 clips. Shown text == spoken text; record exactly this.
+124 clips. Shown text == spoken text; record exactly this.
 
 **Register is आप** — the SME asked for it twice, in as many words. Round 2 was तुम, so most of this list is a re-record, not a new line. `guard_register` in the builder fails the build if a तुम form survives anywhere.
 
 **Only re-record what changed.** The builder deletes exactly the clips whose text moved this round, so `gen_tts.py` (which skips ids that already have a file) regenerates precisely those and leaves every unchanged take alone. Never `--force` the whole card: generated audio is non-deterministic, so re-running an unchanged clip returns a different take — a change the SME never asked for.
 
-## ⚠️ EAR-CHECK — 2 clips a human must listen to before delivery
+## ⚠️ EAR-CHECK — 1 clips a human must listen to before delivery
 
 The TTS model truncates a clip when an **em-dash precedes a short final word** (measured on this lesson: em-dash 0.73–1.05 s vs comma 1.53–2.21 s for the same words), and it does the same to a line built from several short danda-separated pieces. The SME's round-3 MEET_PAIR lines and the new sound-differentiation clips are written in exactly those shapes. Their wording ships as written — rewriting a reviewer's Hindi to dodge a synthesis bug is the worse failure — so the clips are flagged instead. **Truncation is invisible to an existence check and to a file-size check.** `_verify_assets.py` compares each clip against peers of similar text length and is the only thing that catches it. Run it, then listen to every id below.
 
 - `vo_sounds_pair` — प। पै। पैर।
-- `vo_sounds_seb` — स। से। सेब।
 
 ## All clips
 
@@ -31,8 +30,11 @@ The TTS model truncates a clip when an **em-dash precedes a short final word** (
 | `vo_g2_h3` | पैन शब्द में ऐ की मात्रा है। पैन पर टैप कीजिए। |
 | `vo_g3_correct` | शाबाश! बैग शब्द में ऐ की मात्रा है। |
 | `vo_g3_h3` | बैग शब्द में ऐ की मात्रा है। बैग पर टैप कीजिए। |
-| `vo_g4_h1` | फिर से पढ़िए। इस शब्द को उसकी सही मात्रा वाले डिब्बे में डालिए। |
-| `vo_g4_h2` | इस शब्द को उसकी सही मात्रा वाले डिब्बे में डालिए। |
+| `vo_g4_h1` | फिर से पढ़िए। शब्द में कौन-सी मात्रा है, देखिए और उसे उसी मात्रा वाले डिब्बे में डालिए। |
+| `vo_g4_h2_ber` | बेर में ए की मात्रा है। |
+| `vo_g4_h2_paisa` | पैसा में ऐ की मात्रा है। |
+| `vo_g4_h2_sher` | शेर में ए की मात्रा है। |
+| `vo_g4_h2_thaila` | थैला में ऐ की मात्रा है। |
 | `vo_g4_h3_ber` | बेर शब्द में ए की मात्रा है। इसे ए वाले डिब्बे में डालिए। |
 | `vo_g4_h3_paisa` | पैसा शब्द में ऐ की मात्रा है। इसे ऐ वाले डिब्बे में डालिए। |
 | `vo_g4_h3_sher` | शेर शब्द में ए की मात्रा है। इसे ए वाले डिब्बे में डालिए। |
@@ -47,7 +49,7 @@ The TTS model truncates a clip when an **em-dash precedes a short final word** (
 | `vo_g5d_ai` | ऐ की मात्रा इस डिब्बे पर है, इसलिए ऐ इस डिब्बे में गया। |
 | `vo_g5d_e` | ए की मात्रा इस डिब्बे पर है, इसलिए ए इस डिब्बे में गया। |
 | `vo_g5d_prompt` | देखिए, अक्षर को उसकी मात्रा वाले डिब्बे में कैसे डालते हैं। |
-| `vo_landing` | हेलो दोस्त! मैं हूँ स्विफ्टी। आज हम ए और ऐ की मात्रा वाले शब्द पढ़ेंगे। |
+| `vo_landing` | नमस्ते दोस्त! मैं हूँ स्विफ्टी। आज हम ए और ऐ की मात्रा वाले शब्द पढ़ेंगे। |
 | `vo_letter_ai` | ऐ |
 | `vo_letter_e` | ए |
 | `vo_matra_ai` | ऐ की मात्रा |
@@ -82,42 +84,48 @@ The TTS model truncates a clip when an **em-dash precedes a short final word** (
 | `vo_okp_sher` | शाबाश! शेर में ए की मात्रा है। |
 | `vo_onset_pair` | प के साथ ऐ की मात्रा लगाने पर पै बनता है। |
 | `vo_onset_seb` | स के साथ ए की मात्रा लगाने पर से बनता है। |
-| `vo_p1_h1` | फिर से देखिए। चित्र देखकर सही अक्षर से शब्द पूरा कीजिए। |
+| `vo_p1_h1` | फिर से देखिए। चित्र का नाम सोचिए और देखिए शब्द पूरा करने के लिए कौन-सा अक्षर लगेगा। |
+| `vo_p1_h2` | नाम ध्यान से सुनिए। जिस शब्द की शुरुआत इस अक्षर से होती है, उसी डिब्बे में इसे डालिए। |
 | `vo_p1_h3_any` | जो अक्षर चमक रहा है, उसे उसी डिब्बे में डालिए। |
-| `vo_p1_h3_mez` | मे लगाने से मेज़ बनती है। मे को खाली जगह में डालिए। |
-| `vo_p1_h3_pair` | पै लगाने से पैर बनता है। पै को खाली जगह में डालिए। |
-| `vo_p1_h3_seb` | से लगाने से सेब बनता है। से को खाली जगह में डालिए। |
+| `vo_p1_h3_mez` | मे को मेज़ वाले डिब्बे में डालिए। मे, ज़… मेज़। |
+| `vo_p1_h3_pair` | पै को पैर वाले डिब्बे में डालिए। पै, र… पैर। |
+| `vo_p1_h3_seb` | से को सेब वाले डिब्बे में डालिए। से, ब… सेब। |
 | `vo_p1_prompt` | चित्र देखकर सही अक्षर से शब्द पूरा कीजिए। |
-| `vo_p2_h1` | फिर से सुनिए। चित्र को सही मात्रा वाले डिब्बे में डालिए। |
-| `vo_p2_h2` | मात्रा देखिए। चित्र को सही मात्रा वाले डिब्बे में डालिए। |
-| `vo_p2_h3_bag` | बैग में ऐ की मात्रा है। इसे ऐ वाले डिब्बे में डालिए। |
-| `vo_p2_h3_mez` | मेज़ में ए की मात्रा है। इसे ए वाले डिब्बे में डालिए। |
-| `vo_p2_h3_pen` | पैन में ऐ की मात्रा है। इसे ऐ वाले डिब्बे में डालिए। |
-| `vo_p2_h3_sher` | शेर में ए की मात्रा है। इसे ए वाले डिब्बे में डालिए। |
+| `vo_p2_h1` | फिर से सुनिए। चित्र का नाम ध्यान से सुनिए और देखिए उसमें कौन-सी मात्रा है। |
+| `vo_p2_h2_bag` | बैग में ऐ की मात्रा है। अब इसे सही मात्रा वाली बोगी में डालिए। |
+| `vo_p2_h2_mez` | मेज़ में ए की मात्रा है। अब इसे सही मात्रा वाली बोगी में डालिए। |
+| `vo_p2_h2_pen` | पैन में ऐ की मात्रा है। अब इसे सही मात्रा वाली बोगी में डालिए। |
+| `vo_p2_h2_sher` | शेर में ए की मात्रा है। अब इसे सही मात्रा वाली बोगी में डालिए। |
+| `vo_p2_h3_bag` | बैग को ऐ की मात्रा वाली बोगी में डालिए। |
+| `vo_p2_h3_mez` | मेज़ को ए की मात्रा वाली बोगी में डालिए। |
+| `vo_p2_h3_pen` | पैन को ऐ की मात्रा वाली बोगी में डालिए। |
+| `vo_p2_h3_sher` | शेर को ए की मात्रा वाली बोगी में डालिए। |
 | `vo_p2_prompt` | चित्र का नाम सुनिए और उसे सही मात्रा वाले डिब्बे में डालिए। |
 | `vo_p3_correct` | शाबाश! मैं पैन से लिखता हूँ। |
-| `vo_p3_h3` | चित्र में बच्चा पैन से लिख रहा है। पैन को खाली जगह में डालिए। |
+| `vo_p3_h1` | फिर से पढ़िए। चित्र देखिए, बच्चा किससे लिख रहा है? सही शब्द चुनकर वाक्य पूरा कीजिए। |
+| `vo_p3_h3` | मैं पैन से लिखता हूँ। पैन चुनिए। |
 | `vo_p3_try_bail` | मैं बैल से लिखता हूँ। |
 | `vo_p3_try_ped` | मैं पेड़ से लिखता हूँ। |
 | `vo_p3_try_pen` | मैं पैन से लिखता हूँ। |
 | `vo_p4_correct` | शाबाश! बगीचे में एक बड़ा पेड़ है। |
-| `vo_p4_h3` | चित्र में बगीचे में एक बड़ा पेड़ है। पेड़ को खाली जगह में डालिए। |
+| `vo_p4_h1` | फिर से पढ़िए। चित्र देखिए, बगीचे में क्या है? सही शब्द चुनकर वाक्य पूरा कीजिए। |
+| `vo_p4_h3` | बगीचे में एक बड़ा पेड़ है। पेड़ चुनिए। |
 | `vo_p4_try_bail` | बगीचे में एक बड़ा बैल है। |
 | `vo_p4_try_ped` | बगीचे में एक बड़ा पेड़ है। |
 | `vo_p4_try_pen` | बगीचे में एक बड़ा पैन है। |
 | `vo_p5_correct` | शाबाश! मुझे सेब खाना अच्छा लगता है। |
-| `vo_p5_h3` | चित्र में बच्चा सेब खा रहा है। सेब को खाली जगह में डालिए। |
+| `vo_p5_h1` | फिर से पढ़िए। चित्र देखिए, बच्चा क्या खा रहा है? सही शब्द चुनकर वाक्य पूरा कीजिए। |
+| `vo_p5_h3` | मुझे सेब खाना अच्छा लगता है। सेब चुनिए। |
 | `vo_p5_try_bag` | मुझे बैग खाना अच्छा लगता है। |
 | `vo_p5_try_mez` | मुझे मेज़ खाना अच्छा लगता है। |
 | `vo_p5_try_seb` | मुझे सेब खाना अच्छा लगता है। |
-| `vo_pair_ai` | यह है ऐ। इसकी मात्रा देखिए। |
-| `vo_pair_e` | यह है ए। इसकी मात्रा देखिए। |
+| `vo_pair_ai` | यह है ऐ। इसकी मात्रा है। |
+| `vo_pair_e` | यह है ए। इसकी मात्रा है। |
 | `vo_result_pair` | अब र जुड़ने पर पैर बनता है। |
 | `vo_result_seb` | अब ब जुड़ने पर सेब बनता है। |
-| `vo_sc_h1` | फिर से देखिए। चित्र देखकर सही शब्द चुनकर वाक्य पूरा कीजिए। |
+| `vo_sc_h2` | जो वाक्य सही लग रहा है, वही शब्द चुनिए। |
 | `vo_sc_prompt` | चित्र देखकर सही शब्द चुनकर वाक्य पूरा कीजिए। |
 | `vo_sounds_pair` | प। पै। पैर। |
-| `vo_sounds_seb` | स। से। सेब। |
 | `vo_t2_prompt` | आइए, देखें कि ए की मात्रा लगने से शब्द की आवाज़ कैसे बदलती है। |
 | `vo_t3_prompt` | आइए, ए की मात्रा वाले कुछ शब्द देखें। |
 | `vo_t4_prompt` | आइए, देखें कि ऐ की मात्रा लगने से शब्द की आवाज़ कैसे बदलती है। |

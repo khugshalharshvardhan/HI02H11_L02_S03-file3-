@@ -203,10 +203,10 @@ for i, s in enumerate(slides):
             "  const w = c.querySelector('.tr-word');"
             "  return w && w.textContent.trim() === t; });", i)
         wrongs = [c for n, c in enumerate(coaches) if n != right]
-        idle(); d.execute_script(CLICK, wrongs[0]); time.sleep(0.6)
+        idle(); d.execute_script(CLICK, wrongs[0]); time.sleep(1.4)
         a1 = logs(); hand1 = d.execute_script("return document.querySelectorAll('.is-nudge').length;"); hh1 = hand()
         d.execute_script("window.__log=[];")
-        idle(); d.execute_script(CLICK, wrongs[1]); time.sleep(0.8)
+        idle(); d.execute_script(CLICK, wrongs[1]); time.sleep(1.6)
         a2 = logs(); hand2 = d.execute_script("return document.querySelectorAll('.is-nudge').length;"); hh2 = hand()
         d.execute_script("window.__log=[];")
         idle(); d.execute_script(CLICK, coaches[right]); time.sleep(0.9)
@@ -252,10 +252,10 @@ for i, s in enumerate(slides):
         t0 = tiles[0]
         want = t0.get_attribute("data-bin")
         wrong_i = 0 if bins[0] != want else 1
-        idle(); drag(t0, bodies[wrong_i]); time.sleep(0.7)
+        idle(); drag(t0, bodies[wrong_i]); time.sleep(1.4)
         a1 = logs(); h1 = d.execute_script("return document.querySelectorAll('.is-nudge').length;"); hh1 = hand()
         d.execute_script("window.__log=[];")
-        idle(); drag(t0, bodies[wrong_i]); time.sleep(0.9)
+        idle(); drag(t0, bodies[wrong_i]); time.sleep(1.6)
         a2 = logs(); h2 = d.execute_script("return document.querySelectorAll('.is-nudge').length;"); hh2 = hand()
         d.execute_script("window.__log=[];")
         ok_i = bins.index(want)

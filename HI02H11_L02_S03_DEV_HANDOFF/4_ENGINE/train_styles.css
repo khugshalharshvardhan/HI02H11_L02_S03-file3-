@@ -2022,7 +2022,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 .mx-v2 .mx-pic{ width:auto; height:auto; background:transparent; border:none; box-shadow:none;
   transition:opacity .35s ease; }
 .mx-v2 .mx-pic.mp-wait{ opacity:0; }
-.mx-v2 .meet-pic-box.mex-pic .pic-img{ width:220px; height:220px; }
+.mx-v2 .meet-pic-box.mex-pic .pic-img{ width:260px; height:260px; }   /* [S03 QA p5] was 220 - slightly larger, the same on pages 3 and 5 */
 .mx-v2 .meet-pic-box.mex-pic .pic-emoji{ font-size:170px; }
 .mx-wordrow{ display:flex; align-items:center; justify-content:center; gap:26px; }
 .mx-wordrow.mp-in{ animation:mxIn .42s cubic-bezier(.34,1.4,.6,1) both; }
