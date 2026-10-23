@@ -50,9 +50,9 @@
    "round3": "MG1"
   },
   "title_cue_ms": {
-   "tutorial": 3075,
-   "guided": 3575,
-   "practice": 925
+   "tutorial": 2975,
+   "guided": 3755,
+   "practice": 1260
   }
  },
  "scaffold_rules": {
@@ -409,19 +409,19 @@
       "letter": "ए",
       "matra": "े",
       "audio": "vo_pair_e",
-      "cue_ms": 950,
-      "letter_ms": 900,
-      "arrow_ms": 950,
-      "matra_ms": 2050
+      "cue_ms": 1023,
+      "letter_ms": 1130,
+      "arrow_ms": 1130,
+      "matra_ms": 1980
      },
      {
       "letter": "ऐ",
       "matra": "ै",
       "audio": "vo_pair_ai",
-      "cue_ms": 1051,
-      "letter_ms": 900,
-      "arrow_ms": 1051,
-      "matra_ms": 2151
+      "cue_ms": 1364,
+      "letter_ms": 1530,
+      "arrow_ms": 1530,
+      "matra_ms": 2650
      }
     ],
     "phonemes": {
@@ -454,12 +454,12 @@
     "result_img": "obj_seb",
     "result_emoji": "🍎",
     "travel": "down",
-    "syl_ms": 3322,
-    "join_ms": 407,
+    "syl_ms": 3530,
+    "join_ms": 654,
     "sound_ms": null,
-    "drop_ms": 3080,
-    "pic_ms": 1493,
-    "tail_ms": 271,
+    "drop_ms": 3290,
+    "pic_ms": 2970,
+    "tail_ms": 1000,
     "base_img": "obj_sab",
     "base_emoji": "🧒",
     "cap_base": null,
@@ -485,8 +485,8 @@
       "img": "obj_mez",
       "emoji": "🪑",
       "audio_line": "vo_meet_mez",
-      "pic_ms": 1420,
-      "matra_ms": 1630,
+      "pic_ms": 1400,
+      "matra_ms": 1706,
       "matra_audio": null
      },
      {
@@ -495,8 +495,8 @@
       "img": "obj_ped",
       "emoji": "🌳",
       "audio_line": "vo_meet_ped",
-      "pic_ms": 960,
-      "matra_ms": 1496,
+      "pic_ms": 1350,
+      "matra_ms": 1986,
       "matra_audio": null
      }
     ],
@@ -527,16 +527,16 @@
     "result_img": "obj_pair",
     "result_emoji": "🦶",
     "travel": "down",
-    "syl_ms": 3322,
-    "join_ms": 390,
+    "syl_ms": 3561,
+    "join_ms": 520,
     "sound_ms": [
-     120,
-     1550,
-     2850
+     310,
+     1330,
+     2420
     ],
-    "drop_ms": 3330,
-    "pic_ms": 1680,
-    "tail_ms": 260,
+    "drop_ms": 3450,
+    "pic_ms": 2380,
+    "tail_ms": 346,
     "base_img": "obj_par",
     "base_emoji": "📘",
     "cap_base": null,
@@ -562,8 +562,8 @@
       "img": "obj_bail",
       "emoji": "🐂",
       "audio_line": "vo_meet_bail",
-      "pic_ms": 1240,
-      "matra_ms": 1506,
+      "pic_ms": 1580,
+      "matra_ms": 1920,
       "matra_audio": null
      },
      {
@@ -572,8 +572,8 @@
       "img": "obj_bhains",
       "emoji": "🐃",
       "audio_line": "vo_meet_bhains",
-      "pic_ms": 1300,
-      "matra_ms": 1736,
+      "pic_ms": 1490,
+      "matra_ms": 1920,
       "matra_audio": null
      }
     ],
@@ -1297,9 +1297,9 @@
    }
   },
   "track": {
-   "bits": "0011100001100001111110011111111111000111111110000000000000000011111111000000000111111111111110001110000011111000000000",
+   "bits": "000000000000000011100000111000001111100011110000111111111110000000000000000011111111110000000110001111000111110000111000000011110000000000000000000",
    "step_ms": 25,
-   "ms": 2954
+   "ms": 3680
   }
  }
 }

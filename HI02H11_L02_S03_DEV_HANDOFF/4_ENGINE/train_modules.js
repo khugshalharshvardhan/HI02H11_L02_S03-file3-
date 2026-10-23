@@ -619,7 +619,7 @@
            cluster BEYOND the base's width, and it runs the full height rather than below the
            baseline. Detected by measuring, not by a hard-coded list of matras. */
         const base = cl.split(matra).join("");
-        let below = true, xin0 = null, xin1 = null, ystep = null;
+        let below = true, xin0 = null, xin1 = null, ystep = null, aboveMark = false;
         if(base){
           const grow = (_advance(cl, el) - _advance(base, el)) / _mhScale;
           if(grow > 3){ x0 = x0 + (x1 - x0) - grow; y0 = 0; below = false; }
@@ -639,9 +639,11 @@
             const _cs = getComputedStyle(el);
             _cv.font = _cs.fontWeight + " " + _cs.fontSize + " " + _cs.fontFamily;
             const _top = _cv.measureText(strip(base)).actualBoundingBoxAscent;
-            if(isFinite(_top) && _top > 0) y1 = Math.min(y1, baseline - _top + 0.5);
+            /* [S03 QA page 12] half a px ABOVE the line's top, not below it: the headline's anti-aliased
+               top edge was coming out orange under से's mark */
+            if(isFinite(_top) && _top > 0) y1 = Math.min(y1, baseline - _top - 0.5);
           } else { y0 = 0; y1 = baseline * 0.45; }
-          below = false;
+          below = false; aboveMark = true;
         }
         /* [r12] BELOW-BASE MARKS CURL PAST THEIR CLUSTER. ु and ू add no advance, so x1 is the
            base consonant's right edge - and the mark's tail sweeps a few px beyond it and was
@@ -671,7 +673,7 @@
         }
 
         const ov = document.createElement("span");
-        ov.className = "mh-ov" + (opts && opts.glow ? " mh-glow" : "");
+        ov.className = "mh-ov" + (opts && opts.glow ? " mh-glow" : "") + (aboveMark ? " mh-above" : "");
         ov.setAttribute("aria-hidden", "true");
         /* THE OVERLAY'S TEXT LIVES IN AN ATTRIBUTE, NOT IN A TEXT NODE, and is painted by
            .mh-ov::before{content:attr(data-w)}. This is not a style preference — the engine's

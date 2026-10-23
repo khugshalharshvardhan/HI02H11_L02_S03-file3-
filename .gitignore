@@ -20,3 +20,5 @@ __pycache__/
 
 # Local Vercel CLI state
 .vercel/
+_backup_draft1/
+_backup_s01based/

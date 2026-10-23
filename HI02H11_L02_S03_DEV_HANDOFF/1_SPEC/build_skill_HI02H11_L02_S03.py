@@ -923,7 +923,10 @@ def build_card(slides):
                  # [r109] re-measured on the recorded transition lines (25 ms envelope, the phrase
                  # after the last long pause): «चलिए, शुरू करें!» 3075-4225 ms of 4.32 s, «चलिए, साथ
                  # में करें!» 3575-4900 of 5.01 s, «अब आपकी बारी।» 925-1775 of 1.87 s
-                 "title_cue_ms": {"tutorial": 3075, "guided": 3575, "practice": 925}},
+                 # [S03 2026-10-23] re-measured on the lesson's own recorded VO set (silencedetect -35 dB):
+                 # «चलिए, शुरू करें!» from 2975 of 4.44 s, «चलिए, साथ में करें!» 3755 of 5.28 s,
+                 # «अब आपकी बारी।» 1260 of 2.40 s
+                 "title_cue_ms": {"tutorial": 2975, "guided": 3755, "practice": 1260}},
         # REVIEW-1 LADDER — three rungs on every test screen:
         #   wrong 1 = rung-1 VO, nothing else moves and nothing is highlighted
         #   wrong 2 = rung-2 VO plus a DEMONSTRATION (words read out, matras glowed, sentences

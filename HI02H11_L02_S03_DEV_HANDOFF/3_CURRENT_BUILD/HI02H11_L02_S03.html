@@ -2461,9 +2461,10 @@ body.is-start .phase-gate{
    transparent treatment `.tr-pic` uses. */
 .sc-stage{ display:flex; align-items:center; justify-content:center; gap:26px; width:100%;
   padding:2px 4px 14px; }
-.sc-scene{ flex:0 0 auto; width:366px; height:288px; border-radius:22px; overflow:hidden;
+.sc-scene{ flex:0 0 auto; width:366px; height:auto; aspect-ratio:1058/946; border-radius:22px; overflow:hidden;
   background:#EAF4FF; border:3px solid #E4ECF7; display:flex; align-items:center;
   justify-content:center; box-shadow:0 10px 26px rgba(11,61,140,.12); }
+/* [S03 2026-10-22] the panel takes the scenes' own ~1.12:1 shape, so cover no longer crops them */
 .sc-sceneimg{ width:100%; height:100%; object-fit:cover; display:block; }
 .sc-sceneemoji{ font-size:132px; line-height:1; }
 .sc-right{ flex:1 1 auto; display:flex; flex-direction:column; align-items:stretch; gap:16px;
@@ -2534,7 +2535,7 @@ body.is-start .phase-gate{
 @media (max-width:1180px){
        .wb-akshar{ font-size:40px; } .wb-tail{ font-size:36px; } .wb-inakshar{ font-size:34px; }
   .tr-card.k-akshar{ width:88px; min-height:86px; }
-  .sc-scene{ width:312px; height:250px; }
+  .sc-scene{ width:312px; height:auto; }
   .sc-sentence{ font-size:26px; min-height:86px; }
   .sc-blank{ min-width:112px; height:46px; }
   .sc-word{ font-size:26px; }
@@ -4265,6 +4266,11 @@ body.spk-busy .tut-audio{ pointer-events:none !important; opacity:.45; filter:gr
 /* [r145] QA BUG_10: the mic while the speaker replays its word - greyed like a finished mic, no pulse */
 .mx-v2 .mx-mic.mx-wait{ filter:grayscale(1); cursor:default; }
 
+/* [S03 QA page 12] े / ै: the overlay redraws the whole word, so a glow on it spreads the
+   शिरोरेखा's own halo up into the mark's box - a thin orange line along the headline under से.
+   The above-line mark takes no glow. */
+.mh-ov.mh-above, .mh-ov.mh-above.mh-glow{ text-shadow:none; }
+
 
 /* [r111] File5's confetti: the kit's styles (recipe 7) + File5's whole-window layer, copied unchanged */
 /* ===== FLN ANIMATION KIT: confetti BEGIN ===== */
@@ -4560,9 +4566,9 @@ body.spk-busy .tut-audio{ pointer-events:none !important; opacity:.45; filter:gr
    "round3": "MG1"
   },
   "title_cue_ms": {
-   "tutorial": 3075,
-   "guided": 3575,
-   "practice": 925
+   "tutorial": 2975,
+   "guided": 3755,
+   "practice": 1260
   }
  },
  "scaffold_rules": {
@@ -4919,19 +4925,19 @@ body.spk-busy .tut-audio{ pointer-events:none !important; opacity:.45; filter:gr
       "letter": "ए",
       "matra": "े",
       "audio": "vo_pair_e",
-      "cue_ms": 950,
-      "letter_ms": 900,
-      "arrow_ms": 950,
-      "matra_ms": 2050
+      "cue_ms": 1023,
+      "letter_ms": 1130,
+      "arrow_ms": 1130,
+      "matra_ms": 1980
      },
      {
       "letter": "ऐ",
       "matra": "ै",
       "audio": "vo_pair_ai",
-      "cue_ms": 1051,
-      "letter_ms": 900,
-      "arrow_ms": 1051,
-      "matra_ms": 2151
+      "cue_ms": 1364,
+      "letter_ms": 1530,
+      "arrow_ms": 1530,
+      "matra_ms": 2650
      }
     ],
     "phonemes": {
@@ -4964,12 +4970,12 @@ body.spk-busy .tut-audio{ pointer-events:none !important; opacity:.45; filter:gr
     "result_img": "obj_seb",
     "result_emoji": "🍎",
     "travel": "down",
-    "syl_ms": 3322,
-    "join_ms": 407,
+    "syl_ms": 3530,
+    "join_ms": 654,
     "sound_ms": null,
-    "drop_ms": 3080,
-    "pic_ms": 1493,
-    "tail_ms": 271,
+    "drop_ms": 3290,
+    "pic_ms": 2970,
+    "tail_ms": 1000,
     "base_img": "obj_sab",
     "base_emoji": "🧒",
     "cap_base": null,
@@ -4995,8 +5001,8 @@ body.spk-busy .tut-audio{ pointer-events:none !important; opacity:.45; filter:gr
       "img": "obj_mez",
       "emoji": "🪑",
       "audio_line": "vo_meet_mez",
-      "pic_ms": 1420,
-      "matra_ms": 1630,
+      "pic_ms": 1400,
+      "matra_ms": 1706,
       "matra_audio": null
      },
      {
@@ -5005,8 +5011,8 @@ body.spk-busy .tut-audio{ pointer-events:none !important; opacity:.45; filter:gr
       "img": "obj_ped",
       "emoji": "🌳",
       "audio_line": "vo_meet_ped",
-      "pic_ms": 960,
-      "matra_ms": 1496,
+      "pic_ms": 1350,
+      "matra_ms": 1986,
       "matra_audio": null
      }
     ],
@@ -5037,16 +5043,16 @@ body.spk-busy .tut-audio{ pointer-events:none !important; opacity:.45; filter:gr
     "result_img": "obj_pair",
     "result_emoji": "🦶",
     "travel": "down",
-    "syl_ms": 3322,
-    "join_ms": 390,
+    "syl_ms": 3561,
+    "join_ms": 520,
     "sound_ms": [
-     120,
-     1550,
-     2850
+     310,
+     1330,
+     2420
     ],
-    "drop_ms": 3330,
-    "pic_ms": 1680,
-    "tail_ms": 260,
+    "drop_ms": 3450,
+    "pic_ms": 2380,
+    "tail_ms": 346,
     "base_img": "obj_par",
     "base_emoji": "📘",
     "cap_base": null,
@@ -5072,8 +5078,8 @@ body.spk-busy .tut-audio{ pointer-events:none !important; opacity:.45; filter:gr
       "img": "obj_bail",
       "emoji": "🐂",
       "audio_line": "vo_meet_bail",
-      "pic_ms": 1240,
-      "matra_ms": 1506,
+      "pic_ms": 1580,
+      "matra_ms": 1920,
       "matra_audio": null
      },
      {
@@ -5082,8 +5088,8 @@ body.spk-busy .tut-audio{ pointer-events:none !important; opacity:.45; filter:gr
       "img": "obj_bhains",
       "emoji": "🐃",
       "audio_line": "vo_meet_bhains",
-      "pic_ms": 1300,
-      "matra_ms": 1736,
+      "pic_ms": 1490,
+      "matra_ms": 1920,
       "matra_audio": null
      }
     ],
@@ -5807,9 +5813,9 @@ body.spk-busy .tut-audio{ pointer-events:none !important; opacity:.45; filter:gr
    }
   },
   "track": {
-   "bits": "0011100001100001111110011111111111000111111110000000000000000011111111000000000111111111111110001110000011111000000000",
+   "bits": "000000000000000011100000111000001111100011110000111111111110000000000000000011111111110000000110001111000111110000111000000011110000000000000000000",
    "step_ms": 25,
-   "ms": 2954
+   "ms": 3680
   }
  }
 }</script>
@@ -6225,7 +6231,7 @@ function _chainMs(srcs, gapMs){
    no reason to fetch it again and the reviewer keeps hearing the previous take. __AUDIO_V is
    stamped by the builder from the CONTENT of the audio folder, so it changes exactly when a clip
    changes and not otherwise - a fresh URL on every build would defeat caching for no reason. */
-var __AUDIO_V = "c86a7a19bed3";
+var __AUDIO_V = "b655d051efb2";
 function _av(src){
   if(typeof src !== "string" || src.indexOf("assets/Audio/") < 0) return src;
   return src.indexOf("?") >= 0 ? src : src + "?v=" + __AUDIO_V;
@@ -11671,7 +11677,7 @@ SlideModules.MATCH_VACHAN_PAIRS    = SlideModules.MATCH_GENDER_PAIRS;
            cluster BEYOND the base's width, and it runs the full height rather than below the
            baseline. Detected by measuring, not by a hard-coded list of matras. */
         const base = cl.split(matra).join("");
-        let below = true, xin0 = null, xin1 = null, ystep = null;
+        let below = true, xin0 = null, xin1 = null, ystep = null, aboveMark = false;
         if(base){
           const grow = (_advance(cl, el) - _advance(base, el)) / _mhScale;
           if(grow > 3){ x0 = x0 + (x1 - x0) - grow; y0 = 0; below = false; }
@@ -11691,9 +11697,11 @@ SlideModules.MATCH_VACHAN_PAIRS    = SlideModules.MATCH_GENDER_PAIRS;
             const _cs = getComputedStyle(el);
             _cv.font = _cs.fontWeight + " " + _cs.fontSize + " " + _cs.fontFamily;
             const _top = _cv.measureText(strip(base)).actualBoundingBoxAscent;
-            if(isFinite(_top) && _top > 0) y1 = Math.min(y1, baseline - _top + 0.5);
+            /* [S03 QA page 12] half a px ABOVE the line's top, not below it: the headline's anti-aliased
+               top edge was coming out orange under से's mark */
+            if(isFinite(_top) && _top > 0) y1 = Math.min(y1, baseline - _top - 0.5);
           } else { y0 = 0; y1 = baseline * 0.45; }
-          below = false;
+          below = false; aboveMark = true;
         }
         /* [r12] BELOW-BASE MARKS CURL PAST THEIR CLUSTER. ु and ू add no advance, so x1 is the
            base consonant's right edge - and the mark's tail sweeps a few px beyond it and was
@@ -11723,7 +11731,7 @@ SlideModules.MATCH_VACHAN_PAIRS    = SlideModules.MATCH_GENDER_PAIRS;
         }
 
         const ov = document.createElement("span");
-        ov.className = "mh-ov" + (opts && opts.glow ? " mh-glow" : "");
+        ov.className = "mh-ov" + (opts && opts.glow ? " mh-glow" : "") + (aboveMark ? " mh-above" : "");
         ov.setAttribute("aria-hidden", "true");
         /* THE OVERLAY'S TEXT LIVES IN AN ATTRIBUTE, NOT IN A TEXT NODE, and is painted by
            .mh-ov::before{content:attr(data-w)}. This is not a style preference — the engine's
@@ -14294,7 +14302,7 @@ const ONLY_UU = POOL_UU.filter(w=>hasUU(w[0]) && !hasU(w[0]));
    that had heard the old goal_u.ogg would go on playing it after every redeploy. The lesson build
    stamps this from the CONTENT of the game's voice, music and feedback files, so it moves exactly
    when one of them changes. Opened on its own the game keeps the placeholder, which is harmless. */
-const MR_AV = "5bf1ab743e7a";
+const MR_AV = "6f7671573566";
 const mrv = u => u + "?v=" + MR_AV;
 /* [r124] THE SAME FOR THE GAME'S PICTURES AND ITS VIDEO. Yasir: "when I enter the game screen it
    plays the very earlier version ... multiple times". The art has been replaced several times under
@@ -18252,7 +18260,7 @@ if(document.fonts && document.fonts.load){
        it never competes with the lesson's own voice. The pictures are kept, decoded, until the game
        has started. */
     const D = "assets/MatraRunner/";
-    const ART_V = "ac688d405eea", AUD_V = "5bf1ab743e7a";
+    const ART_V = "ac688d405eea", AUD_V = "6f7671573566";
     const imgs = "bg_hills.webp,bg_mountains.webp,bg_sky.webp,bg_valley.webp,bridge_deck.webp,bridge_post.webp,bridge_wall.webp,bush_1.webp,bush_2.webp,coin.webp,gate_correct.webp,gate_neutral.webp,gate_wrong.webp,heart_empty.webp,heart_full.webp,hedge.webp,lantern.webp,ob_beam.webp,ob_block.webp,ob_log.webp,ob_thorns.webp,panel3.webp,pillar_1.webp,pillar_2.webp,plate.webp,rail.webp,star_empty.webp,star_full.webp,swifty_bump.webp,swifty_cheer.webp,swifty_fall.webp,swifty_happy.webp,swifty_hit.webp,swifty_jump.webp,swifty_lean_left.webp,swifty_lean_right.webp,swifty_run.webp,swifty_slide.webp,swifty_stumble.webp,tex_grass.webp,tex_path.webp,tree_1.webp,tree_2.webp,tree_3.webp,ui_badge.webp,ui_banner.webp,ui_btn.webp,coin.svg".split(",").filter(Boolean);
     const vid = (()=>{ try{ const v = document.createElement("video");
                        return v.canPlayType('video/webm; codecs="vp9"') ? "bg_valley.webm" : "bg_valley.mp4"; }

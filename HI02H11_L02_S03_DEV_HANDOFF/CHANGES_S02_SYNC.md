@@ -128,3 +128,17 @@ Completed with a new key (2026-10-22):
   activity with S02's VO order (page 11 hint 2 = «पैसा में ऐ की मात्रा है।» after the options are read).
 * Page 11 coin replaced again with the user's own ₹1 coin picture (`paisa.png`), scaled to the same
   footprint as the other tray pictures; the generated coin is in `../_backup_draft1/replaced_images_2026-10-22/`.
+* Pages 14-16: the scene panel takes the scenes' own ~1.12:1 shape (`aspect-ratio` on `.sc-scene`), so
+  `object-fit:cover` no longer cuts off the top and bottom of the pictures.
+* Page 12 (and every े / ै highlight): the orange no longer touches the शिरोरेखा - the overlay's glow is off
+  for above-line marks (`.mh-above`) and the box stops half a px above the headline's top.
+
+## 2026-10-23 — the lesson's own VO set installed
+
+All 220 clips of `HI02H11_L02_S03_Manifest.xlsx` replaced from the delivered set (`VO's for ए-ऐ/voiceovers/*.wav`):
+126 lesson clips → `assets/Audio/<id>.ogg` (WAV data, the lesson's convention), 94 runner clips →
+`assets/MatraRunner/voice/<id>.ogg` (Ogg Vorbis q4); every clip loudness-matched to -16 LUFS (TP -1.5).
+This includes the three transition lines and the lines that were S02's human takes - the lesson now has
+one voice throughout. Transition title cues re-measured (2975 / 3755 / 1260 ms); the rebuild re-measured
+page 1-5 animation cues and the celebration lip-sync from the new clips. Mechanics driver: every
+activity plays its ladder, nav unlocks, 0 missing files. Previous audio: `../_backup_draft1/pre_new_vo_2026-10-23/`.
