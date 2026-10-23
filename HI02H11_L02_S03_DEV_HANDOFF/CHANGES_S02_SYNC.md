@@ -142,3 +142,10 @@ This includes the three transition lines and the lines that were S02's human tak
 one voice throughout. Transition title cues re-measured (2975 / 3755 / 1260 ms); the rebuild re-measured
 page 1-5 animation cues and the celebration lip-sync from the new clips. Mechanics driver: every
 activity plays its ladder, nav unlocks, 0 missing files. Previous audio: `../_backup_draft1/pre_new_vo_2026-10-23/`.
+
+## 2026-10-23 — S02 `8e8fd29` (r151) applied: mic hand + «इस बटन पर टैप करिए» right after the word's line
+
+Pages 3 / 5: the hand goes to the mic and «इस बटन पर टैप करिए» plays 0.35 s after «…बोलकर देखिए» ends (it used to
+wait for 7 s of inactivity); then it repeats after every 7 s of nothing until the mic is tapped. Same one-line
+change as S02 in `4_ENGINE/train_modules.js`, re-injected into the template. Measured: hand + line 0.37 s after
+the line ends on मेज़ and बैल, repeat 7.0 s after it finishes.
