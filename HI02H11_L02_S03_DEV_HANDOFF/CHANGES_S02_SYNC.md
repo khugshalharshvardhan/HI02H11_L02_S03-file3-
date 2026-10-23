@@ -152,3 +152,5 @@ the line ends on मेज़ and बैल, repeat 7.0 s after it finishes.
 * Then narrowed at the user's request: the instant hand + line is page 3 only (`data.mic_nudge_now`, set for T3
   by the builder); page 5 waits for 7 s of inactivity as before. Measured: page 3 at 0.36 s after the line,
   page 5 at 7.0 s; both repeat every 7 s until the mic is tapped.
+* Narrowed again: instant only after page 3's FIRST word (मेज़); पेड़, बैल and भैंस wait for 7 s of inactivity.
+  Measured: मेज़ 0.36 s, पेड़ 7.0 s, बैल 7.0 s, भैंस 7.0 s after the word's line ends.
