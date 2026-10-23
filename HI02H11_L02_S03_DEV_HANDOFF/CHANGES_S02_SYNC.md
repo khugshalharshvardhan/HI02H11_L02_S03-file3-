@@ -149,3 +149,6 @@ Pages 3 / 5: the hand goes to the mic and «इस बटन पर टैप �
 wait for 7 s of inactivity); then it repeats after every 7 s of nothing until the mic is tapped. Same one-line
 change as S02 in `4_ENGINE/train_modules.js`, re-injected into the template. Measured: hand + line 0.37 s after
 the line ends on मेज़ and बैल, repeat 7.0 s after it finishes.
+* Then narrowed at the user's request: the instant hand + line is page 3 only (`data.mic_nudge_now`, set for T3
+  by the builder); page 5 waits for 7 s of inactivity as before. Measured: page 3 at 0.36 s after the line,
+  page 5 at 7.0 s; both repeat every 7 s until the mic is tapped.
